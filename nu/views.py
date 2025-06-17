@@ -6,52 +6,54 @@ def index(request):
     return render(request, 'index.html')
 
 @csrf_exempt
+# 👇 TDEE + Macro Calculator Function
+def calculate_tdee_and_nutrition(age, gender, height, weight, target_weight, activity_level):
+    if gender == "male":
+        bmr = 10 * weight + 6.25 * height - 5 * age + 5
+    else:
+        bmr = 10 * weight + 6.25 * height - 5 * age - 161
+
+    activity_factors = {
+        "sedentary": 1.2,
+        "light": 1.375,
+        "moderate": 1.55,
+        "active": 1.725,
+        "very_active": 1.9,
+    }
+    tdee = bmr * activity_factors.get(activity_level, 1.2)
+
+    protein = 1.6 * target_weight
+    fat = (0.25 * tdee) / 9
+    remaining_cal = tdee - (protein * 4 + fat * 9)
+    carbs = remaining_cal / 4
+    fiber = 25
+
+    return round(tdee), round(protein, 1), round(fat, 1), round(carbs, 1), fiber
+
+# 👇 View to handle /profile form
 def profile(request):
-    if request.method == 'POST':
-        current_weight = float(request.POST.get('current_weight'))
-        target_weight = float(request.POST.get('target_weight'))
-        height = float(request.POST.get('height'))
-        age = int(request.POST.get('age'))
-        gender = request.POST.get('gender')
-        activity_level = request.POST.get('activity_level')
-        goal = request.POST.get('goal')
+    if request.method == "POST":
+        current_weight = float(request.POST['current_weight'])
+        target_weight = float(request.POST['target_weight'])
+        height = float(request.POST['height'])
+        age = int(request.POST['age'])
+        gender = request.POST['gender']
+        activity_level = request.POST['activity_level']
+        goal = request.POST['goal']
 
-        # BMR Calculation using Mifflin-St Jeor Equation
-        if gender == 'male':
-            bmr = 10 * current_weight + 6.25 * height - 5 * age + 5
-        else:
-            bmr = 10 * current_weight + 6.25 * height - 5 * age - 161
 
-        # Activity multiplier
-        activity_factors = {
-            'sedentary': 1.2,
-            'light': 1.375,
-            'moderate': 1.55,
-            'active': 1.725,
-            'very_active': 1.9
+        tdee, protein, fat, carbs, fiber = calculate_tdee_and_nutrition(
+            age, gender, height, current_weight, target_weight, activity_level
+        )
+
+        context = {
+            "tdee": tdee,
+            "protein": protein,
+            "fat": fat,
+            "carbs": carbs,
+            "fiber": fiber,
         }
 
-        activity_factor = activity_factors.get(activity_level, 1.2)
-        tdee = bmr * activity_factor  # Total Daily Energy Expenditure
+        return render(request, "result.html", context)
 
-        # Adjust calories based on goal
-        if goal == 'lose':
-            tdee -= 500
-        elif goal == 'gain':
-            tdee += 500
-
-        # Nutrient Breakdown
-        protein = round((0.8 * current_weight), 1)  # grams
-        fat = round((0.3 * tdee) / 9, 1)           # grams
-        carbs = round((0.5 * tdee) / 4, 1)         # grams
-        fiber = 25  # Default recommended value
-
-        return render(request, 'result.html', {
-            'calories': round(tdee),
-            'protein': protein,
-            'fat': fat,
-            'carbs': carbs,
-            'fiber': fiber
-        })
-
-    return render(request, 'profile.html')
+    return render(request, "profile.html")
