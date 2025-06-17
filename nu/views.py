@@ -1,9 +1,22 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from .utils import fetch_nutrition_from_perplexity
 
+import json 
 @csrf_exempt
 def index(request):
-    return render(request, 'index.html')
+    nutrition_data = ""
+    
+    if request.method == "POST":
+        user_input = request.POST.get("food_input", "").strip()
+        if user_input:
+            # 👇 Call your actual function that gets nutrition info
+            nutrition_data = fetch_nutrition_from_perplexity(user_input)
+        else:
+            nutrition_data = "Please enter a valid food item."
+    
+    return render(request, 'index.html', {'nutrition_data': nutrition_data})
+
 
 @csrf_exempt
 # 👇 TDEE + Macro Calculator Function
@@ -46,13 +59,21 @@ def profile(request):
             age, gender, height, current_weight, target_weight, activity_level
         )
 
+        macro_data = {
+    "protein": protein,
+    "fat": fat,
+    "carbs": carbs,
+    "fiber": fiber,
+}
+
         context = {
-            "tdee": tdee,
-            "protein": protein,
-            "fat": fat,
-            "carbs": carbs,
-            "fiber": fiber,
-        }
+    "tdee": tdee,
+    "protein": protein,
+    "fat": fat,
+    "carbs": carbs,
+    "fiber": fiber,
+    "macro_data_json": json.dumps(macro_data)
+}
 
         return render(request, "result.html", context)
 
