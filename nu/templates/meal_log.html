@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Meal Logger</title>
+</head>
+<body>
+    <h2>Log Your Meals</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="food_input" placeholder="e.g. 2 Idlis 150g">
+        <select name="meal_type">
+            <option value="breakfast">Breakfast</option>
+            <option value="morning_snack">Morning Snack</option>
+            <option value="lunch">Lunch</option>
+            <option value="evening_snack">Evening Snack</option>
+            <option value="dinner">Dinner</option>
+        </select>
+        <button type="submit">Add</button>
+    </form>
+
+    <h3>Logged Meals</h3>
+    {% for meal, items in logged_meals.items %}
+        <h4>{{ meal|title }}</h4>
+        <ul>
+            {% for item in items %}
+                <li>{{ item.food }} - {{ item.calories }} kcal, {{ item.protein }}g protein, {{ item.fat }}g fat, {{ item.carbs }}g carbs, {{ item.fiber }}g fiber</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+
+    <hr>
+    <h3>Total Daily Intake:</h3>
+    <ul>
+        <li>Calories: {{ totals.calories }} kcal</li>
+        <li>Protein: {{ totals.protein }} g</li>
+        <li>Fat: {{ totals.fat }} g</li>
+        <li>Carbs: {{ totals.carbs }} g</li>
+        <li>Fiber: {{ totals.fiber }} g</li>
+    </ul>
+</body>
+</html>

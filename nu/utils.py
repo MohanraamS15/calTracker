@@ -17,7 +17,7 @@ def fetch_nutrition_from_perplexity(food_query):
                 {"role": "system", "content": "You're a certified dietitian. Reply in clean bullet points."},
                 {
                 "role": "user",
-                "content": f"Give only the nutritional values for {food_query}. Reply in this format: Name: /n Calories: ___ kcal, Protein: ___ g, Fat: ___ g, Carbs: ___ g, Fiber: ___ g. Do not include explanations or brackets. Keep it short."
+                "content": f"Give only the nutritional values for {food_query}.If the quantity is not given take by default of 100g for it.If only the count  is given(like 1 idly),then take it for the medium sized of the food ,and disply it. Reply in this format: Name: /n Calories: ___ kcal, Protein: ___ g, Fat: ___ g, Carbs: ___ g, Fiber: ___ g. Do not include explanations or brackets. Keep it short."
 
 }
 

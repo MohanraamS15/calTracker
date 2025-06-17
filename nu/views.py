@@ -1,6 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.views.decorators.csrf import csrf_exempt
 from .utils import fetch_nutrition_from_perplexity
+import json
 
 import json 
 @csrf_exempt
@@ -78,3 +79,69 @@ def profile(request):
         return render(request, "result.html", context)
 
     return render(request, "profile.html")
+
+
+
+
+@csrf_exempt
+def log_meal(request):
+    if request.method == "POST":
+        meal_type = request.POST.get("meal_type", "")
+        food_input = request.POST.get("food_input", "")
+        result = fetch_nutrition_from_perplexity(food_input)
+
+        # Dummy parse (you can improve formatting later)
+        parsed = {
+            "food": food_input,
+            "raw_response": result,
+            "calories": extract_number(result, "Calories"),
+            "protein": extract_number(result, "Protein"),
+            "fat": extract_number(result, "Fat"),
+            "carbs": extract_number(result, "Carbs"),
+            "fiber": extract_number(result, "Fiber"),
+        }
+
+        if "logged_meals" not in request.session:
+            request.session["logged_meals"] = {}
+
+        if meal_type not in request.session["logged_meals"]:
+            request.session["logged_meals"][meal_type] = []
+
+        request.session["logged_meals"][meal_type].append(parsed)
+        request.session.modified = True
+
+    # Calculate totals
+    totals = {
+        "calories": 0,
+        "protein": 0,
+        "fat": 0,
+        "carbs": 0,
+        "fiber": 0
+    }
+
+    for meals in request.session.get("logged_meals", {}).values():
+        for item in meals:
+            totals["calories"] += item.get("calories", 0)
+            totals["protein"] += item.get("protein", 0)
+            totals["fat"] += item.get("fat", 0)
+            totals["carbs"] += item.get("carbs", 0)
+            totals["fiber"] += item.get("fiber", 0)
+
+    print("DEBUG TOTALS:", totals)
+
+    return render(request, "meal_log.html", {
+        "logged_meals": request.session.get("logged_meals", {}),
+        "totals": totals
+    })
+
+    
+
+# Helper function to extract numbers from string
+def extract_number(text, key):
+    try:
+        import re
+        pattern = rf"{key}:\s*([0-9]+(?:\.[0-9]*)?)"
+        match = re.search(pattern, text)
+        return float(match.group(1)) if match else 0
+    except:
+        return 0
