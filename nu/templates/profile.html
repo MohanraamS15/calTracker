@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CalTracker - Profile Setup</title>
+</head>
+<body>
+    <h1>Set Up Your Profile</h1>
+    <form method="POST" action="/profile/">
+        {% csrf_token %}
+        <label>Current Weight (kg):</label><br>
+        <input type="number" name="current_weight" required><br><br>
+
+        <label>Target Weight (kg):</label><br>
+        <input type="number" name="target_weight" required><br><br>
+
+        <label>Height (cm):</label><br>
+        <input type="number" name="height" required><br><br>
+
+        <label>Age:</label><br>
+        <input type="number" name="age" required><br><br>
+
+        <label>Gender:</label><br>
+        <select name="gender" required>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+        </select><br><br>
+
+        <label>Activity Level:</label><br>
+        <select name="activity_level" required>
+            <option value="sedentary">Sedentary</option>
+            <option value="light">Light Activity</option>
+            <option value="moderate">Moderate</option>
+            <option value="active">Active</option>
+            <option value="very_active">Very Active</option>
+        </select><br><br>
+
+        <label>Goal:</label><br>
+        <select name="goal" required>
+            <option value="maintain">Maintain</option>
+            <option value="lose">Lose Weight</option>
+            <option value="gain">Gain Muscle</option>
+        </select><br><br>
+
+        <button type="submit">Calculate My Daily Calories</button>
+    </form>
+</body>
+</html>

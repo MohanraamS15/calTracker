@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head><title>Instant Nutrition Checker</title></head>
+<body>
+  <h2>Check Nutrition Instantly 🍽️</h2>
+  <form method="POST">
+  {% csrf_token %}
+  <input type="text" name="food" placeholder="Enter food name" required />
+  <button type="submit">Get Nutrition</button>
+</form>
+
+  {% if result %}
+    <div class="nutrition-result">
+        <p><strong>Nutrition Info:</strong></p>
+        <pre>{{ result }}</pre>
+    </div>
+{% endif %}
+
+</body>
+</html>
