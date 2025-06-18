@@ -1,9 +1,11 @@
+<!-- templates/login.html -->
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Credential Vault - Sign In</title>
+    <title>NutriTracker - Sign In</title>
     <style>
         * {
             margin: 0;
@@ -12,7 +14,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -24,101 +26,114 @@
         .auth-container {
             background: white;
             border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             padding: 40px;
             width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            max-width: 450px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #8B5CF6, #EC4899, #06B6D4);
         }
 
         .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 30px;
+            margin: 0 auto 20px;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .logo-icon::before {
+            content: '🍎';
+            font-size: 36px;
+            color: white;
+        }
+
+        .logo h1 {
+            color: #8B5CF6;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo p {
+            color: #6B7280;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: #F3F4F6;
+            border-radius: 12px;
+            padding: 6px;
+            margin-bottom: 30px;
             position: relative;
         }
 
-        .logo::before {
-            content: "🔗";
-            font-size: 32px;
-            color: white;
-        }
-
-        .auth-title {
-            font-size: 32px;
-            font-weight: 700;
-            color: #7c3aed;
-            margin-bottom: 10px;
-        }
-
-        .auth-subtitle {
-            color: #6b7280;
-            margin-bottom: 30px;
-            font-size: 16px;
-        }
-
-        .tab-container {
-            display: flex;
-            background: #f3f4f6;
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 30px;
-        }
-
-        .tab {
+        .auth-tab {
             flex: 1;
-            padding: 12px;
+            padding: 12px 20px;
             border: none;
             background: transparent;
-            border-radius: 8px;
-            font-weight: 600;
+            color: #6B7280;
+            font-size: 16px;
+            font-weight: 500;
             cursor: pointer;
+            border-radius: 8px;
             transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
             text-decoration: none;
-            display: block;
-            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .tab.active {
-            background: #7c3aed;
+        .auth-tab.active {
             color: white;
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
         }
 
         .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        .form-input-container {
+            margin-bottom: 24px;
             position: relative;
         }
 
-        .form-input {
-            width: 100%;
-            padding: 16px 16px 16px 50px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 16px;
-            background: #f9fafb;
-            transition: all 0.3s ease;
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+            font-size: 14px;
         }
 
-        .form-input:focus {
-            outline: none;
-            border-color: #7c3aed;
-            background: white;
+        .input-wrapper {
+            position: relative;
         }
 
         .input-icon {
@@ -126,26 +141,55 @@
             left: 16px;
             top: 50%;
             transform: translateY(-50%);
-            color: #9ca3af;
+            color: #9CA3AF;
             font-size: 18px;
+            z-index: 1;
         }
 
-        .toggle-password {
+        .form-input {
+            width: 100%;
+            padding: 16px 16px 16px 50px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #F9FAFB;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: #8B5CF6;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #9CA3AF;
+        }
+
+        .password-toggle {
             position: absolute;
             right: 16px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
+            color: #9CA3AF;
             cursor: pointer;
-            color: #9ca3af;
             font-size: 18px;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #6B7280;
         }
 
         .submit-btn {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
             color: white;
             border: none;
             border-radius: 12px;
@@ -153,137 +197,167 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+            position: relative;
+            overflow: hidden;
         }
 
         .submit-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
         }
 
-        .data-notice {
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #E5E7EB;
+            color: #6B7280;
             font-size: 14px;
-            color: #6b7280;
-            line-height: 1.5;
         }
 
         .error-message {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 12px;
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #DC2626;
+            padding: 12px 16px;
             border-radius: 8px;
             margin-bottom: 20px;
             font-size: 14px;
         }
 
-        .messages {
-            margin-bottom: 20px;
-        }
-
-        .alert {
-            padding: 12px;
+        .success-message {
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            color: #059669;
+            padding: 12px 16px;
             border-radius: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
         }
 
-        .alert-success {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #16a34a;
-        }
-
-        .alert-error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-        }
-
-        .alert-info {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            color: #2563eb;
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 30px 25px;
+                margin: 10px;
+            }
+            
+            .logo h1 {
+                font-size: 28px;
+            }
+            
+            .logo-icon {
+                width: 70px;
+                height: 70px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="auth-container">
-        <div class="logo"></div>
-        <h1 class="auth-title">Credential Vault</h1>
-        <p class="auth-subtitle">Sign in to your account</p>
-
-        <div class="tab-container">
-            <button class="tab active">🔑 Login</button>
-            <a href="{% url 'signup' %}" class="tab">👤 Sign Up</a>
+        <div class="logo">
+            <div class="logo-icon"></div>
+            <h1>CalTracker</h1>
+            <p>Sign in to your account</p>
         </div>
 
+        <div class="auth-tabs">
+            <div class="auth-tab active">🔑 Login</div>
+            <a href="{% url 'signup' %}" class="auth-tab">👤 Sign Up</a>
+        </div>
+
+        <!-- Django Messages -->
         {% if messages %}
-            <div class="messages">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                {% endfor %}
-            </div>
+            {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
         {% endif %}
 
+        <!-- Display error from login view -->
         {% if error %}
             <div class="error-message">{{ error }}</div>
         {% endif %}
 
-        <form method="post">
+        <!-- Login Form -->
+        <form method="POST" id="loginForm">
             {% csrf_token %}
             <div class="form-group">
-                <label class="form-label">Username</label>
-                <div class="form-input-container">
+                <label for="username">Username</label>
+                <div class="input-wrapper">
                     <span class="input-icon">👤</span>
-                    <input 
-                        type="text" 
-                        name="username" 
-                        class="form-input" 
-                        placeholder="your_username"
-                        value="{{ username|default:'' }}"
-                        required
-                    >
+                    <input type="text" id="username" name="username" class="form-input" 
+                           placeholder="your_username" required 
+                           value="{{ username|default:'' }}">
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Password</label>
-                <div class="form-input-container">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
                     <span class="input-icon">🔒</span>
-                    <input 
-                        type="password" 
-                        name="password" 
-                        class="form-input" 
-                        placeholder="••••••••"
-                        id="password"
-                        required
-                    >
-                    <button type="button" class="toggle-password" onclick="togglePassword()">👁️</button>
+                    <input type="password" id="password" name="password" class="form-input" 
+                           placeholder="••••••••" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
                 </div>
             </div>
 
             <button type="submit" class="submit-btn">Sign In</button>
         </form>
 
-        <div class="data-notice">
-            Your data is stored locally in your browser.<br>
+        <div class="form-footer">
+            Your data is stored securely.<br>
             Be mindful of shared devices.
         </div>
     </div>
 
     <script>
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const toggleBtn = document.querySelector('.toggle-password');
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const toggle = input.parentNode.querySelector('.password-toggle');
             
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleBtn.textContent = '🙈';
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggle.textContent = '🙈';
             } else {
-                passwordInput.type = 'password';
-                toggleBtn.textContent = '👁️';
+                input.type = 'password';
+                toggle.textContent = '👁️';
             }
         }
+
+        // Add smooth transitions
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('.form-input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentNode.style.transform = 'scale(1.02)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentNode.style.transform = 'scale(1)';
+                });
+            });
+        });
     </script>
 </body>
 </html>
