@@ -145,3 +145,23 @@ def extract_number(text, key):
         return float(match.group(1)) if match else 0
     except:
         return 0
+    
+
+@csrf_exempt
+def recommend_meal(request):
+    recommendation = ""
+    if request.method == "POST":
+        preference = request.POST.get("preference", "")
+        exclusions = request.POST.get("exclusions", "")
+        remaining_calories = request.POST.get("remaining_calories", "")
+
+        user_prompt = f"""
+        Create a {preference} meal plan for one meal under {remaining_calories} calories.
+        Exclude these ingredients: {exclusions}.
+        Provide the dish name and macro breakdown (Calories, Protein, Fat, Carbs, Fiber).
+        """
+
+        # Call Gemini or Perplexity
+        recommendation = fetch_nutrition_from_perplexity(user_prompt)
+
+    return render(request, 'recommend_meal.html', {"recommendation": recommendation})
