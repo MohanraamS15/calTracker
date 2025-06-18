@@ -4,8 +4,22 @@
     <title>CalTracker - Profile Setup</title>
 </head>
 <body>
+    <h1>User Profile</h1>
+
+    <div>
+        <p>Username: {{ user.username }}</p>
+        <p>Email: {{ user.email }}</p>
+    </div>
+
+    {% if tdee %}
+        <div style="background-color:#e0ffe0; padding: 10px; border-radius: 5px;">
+            <strong>Your Daily Calorie Need (TDEE):</strong> {{ tdee }} kcal/day 💪
+        </div>
+        <br>
+    {% endif %}
+
     <h1>Set Up Your Profile</h1>
-    <form method="POST" action="/profile/">
+    <form method="POST">
         {% csrf_token %}
         <label>Current Weight (kg):</label><br>
         <input type="number" name="current_weight" required><br><br>

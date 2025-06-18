@@ -4,6 +4,12 @@ from .utils import fetch_nutrition_from_perplexity
 import json
 from django.utils import timezone
 
+from django.contrib.auth.models import User
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 
 
 @csrf_exempt
@@ -195,3 +201,87 @@ def delete_meal(request):
                 request.session.modified = True
 
         return redirect("log_meal")
+
+
+
+
+
+@csrf_exempt
+def signup_view(request):
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+        if User.objects.filter(username=username).exists():
+            return render(request, "signup.html", {"error": "User already exists"})
+        user = User.objects.create_user(username=username, password=password)
+        login(request, user)
+        return redirect("profile")
+    return render(request, "signup.html")
+
+@csrf_exempt
+def login_view(request):
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect("log_meal")
+        else:
+            return render(request, "login.html", {"error": "Invalid credentials"})
+    return render(request, "login.html")
+
+def calculate_tdee(weight, height, age, gender, activity_level, goal):
+    # Mifflin-St Jeor Equation
+    if gender == "male":
+        bmr = 10 * weight + 6.25 * height - 5 * age + 5
+    else:
+        bmr = 10 * weight + 6.25 * height - 5 * age - 161
+
+    activity_factors = {
+        "sedentary": 1.2,
+        "light": 1.375,
+        "moderate": 1.55,
+        "active": 1.725,
+        "very_active": 1.9
+    }
+
+    tdee = bmr * activity_factors.get(activity_level, 1.2)
+
+    if goal == "lose":
+        tdee -= 500
+    elif goal == "gain":
+        tdee += 300
+
+    return int(tdee)
+
+
+@login_required
+@csrf_exempt
+def profile_view(request):
+    tdee = None
+
+    if request.method == "POST":
+        weight = float(request.POST["current_weight"])
+        height = float(request.POST["height"])
+        age = int(request.POST["age"])
+        gender = request.POST["gender"]
+        activity_level = request.POST["activity_level"]
+        goal = request.POST["goal"]
+
+        tdee = calculate_tdee(weight, height, age, gender, activity_level, goal)
+
+        request.session["tdee"] = tdee
+        request.session["profile_complete"] = True
+
+        return redirect("log_meal")
+
+    return render(request, "profile.html", {
+        "user": request.user,
+        "tdee": request.session.get("tdee", None),
+    })
+
+
+def logout_view(request):
+    logout(request)
+    return redirect("login")
