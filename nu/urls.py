@@ -7,4 +7,6 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('log-meal/', views.log_meal, name='log_meal'),
     path('recommend/', views.recommend_meal, name='recommend_meal'),
+    path('delete-meal/', views.delete_meal, name='delete_meal'),
+
 ]

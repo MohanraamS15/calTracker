@@ -2,8 +2,10 @@ from django.shortcuts import render,redirect
 from django.views.decorators.csrf import csrf_exempt
 from .utils import fetch_nutrition_from_perplexity
 import json
+from django.utils import timezone
 
-import json 
+
+
 @csrf_exempt
 def index(request):
     nutrition_data = ""
@@ -83,12 +85,19 @@ def profile(request):
 
 
 
+
+
+@csrf_exempt
 @csrf_exempt
 def log_meal(request):
     if request.method == "POST":
-        meal_type = request.POST.get("meal_type")
-        food = request.POST.get("food")
-        quantity = request.POST.get("quantity")
+        meal_type = request.POST.get("meal_type", "").title()
+        food = request.POST.get("food", "").strip()
+        quantity = request.POST.get("quantity", "").strip()
+
+        # Block empty food name
+        if not food:
+            return redirect("log_meal")  # Or show a message if needed
 
         prompt = f"Find the nutrition info (calories, protein, fat, carbs, fiber) for {quantity} {food}"
         result = fetch_nutrition_from_perplexity(prompt)
@@ -101,6 +110,7 @@ def log_meal(request):
             "fat": extract_number(result, "Fat"),
             "carbs": extract_number(result, "Carbs"),
             "fiber": extract_number(result, "Fiber"),
+            "timestamp": timezone.now().strftime("%I:%M %p"),
         }
 
         if "logged_meals" not in request.session:
@@ -112,30 +122,12 @@ def log_meal(request):
         request.session["logged_meals"][meal_type].append(meal)
         request.session.modified = True
 
-    # Now always show the page
-    logged_meals = request.session.get("logged_meals", {})
-
-    # Calculate totals
-    totals = {
-        "calories": 0,
-        "protein": 0,
-        "fat": 0,
-        "carbs": 0,
-        "fiber": 0
-    }
-
-    for meal_list in logged_meals.values():
-        for meal in meal_list:
-            totals["calories"] += meal.get("calories", 0)
-            totals["protein"] += meal.get("protein", 0)
-            totals["fat"] += meal.get("fat", 0)
-            totals["carbs"] += meal.get("carbs", 0)
-            totals["fiber"] += meal.get("fiber", 0)
-
+    # Show page
     return render(request, "meal_log.html", {
-    "logged_meals": request.session.get("logged_meals", {}),
-    "totals": calculate_total_macros(request.session.get("logged_meals", {}))
-})
+        "logged_meals": request.session.get("logged_meals", {}),
+        "totals": calculate_total_macros(request.session.get("logged_meals", {})),
+    })
+
 
 def calculate_total_macros(meals):
     totals = {"calories": 0, "protein": 0, "fat": 0, "carbs": 0, "fiber": 0}
@@ -188,3 +180,18 @@ def recommend_meal(request):
     return render(request, "recommend_meal.html", {
         "recommendation_list": recommendation_list
     })
+
+
+@csrf_exempt
+def delete_meal(request):
+    if request.method == "POST":
+        meal_type = request.POST.get("meal_type")
+        index = int(request.POST.get("index"))
+
+        if "logged_meals" in request.session:
+            meals = request.session["logged_meals"].get(meal_type, [])
+            if 0 <= index < len(meals):
+                meals.pop(index)
+                request.session.modified = True
+
+        return redirect("log_meal")

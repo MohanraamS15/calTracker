@@ -10,7 +10,8 @@
     <form method="POST">
         {% csrf_token %}
         <label>Food Item:</label>
-        <input type="text" name="food" placeholder="e.g. 2 Idlis"><br><br>
+<input type="text" name="food" placeholder="e.g. 2 Idlis" required><br><br>
+
 
         <label>Quantity (e.g. 150g):</label>
         <input type="text" name="quantity" placeholder="e.g. 150g"><br><br>
@@ -32,23 +33,36 @@
     <h3>Logged Meals</h3>
     {% if logged_meals %}
         {% for meal_type, meals in logged_meals.items %}
-            <h4>{{ meal_type }}</h4>
-            <ul>
-            {% for item in meals %}
-                <li>
-                    {% if item.food == "AI Recommended Meal" %}
-                        <strong>{{ item.food }}</strong><br>
-                        <pre>{{ item.raw_response }}</pre>
-                    {% else %}
-                        {{ item.food }} - {{ item.calories }} kcal,
-                        {{ item.protein }}g protein,
-                        {{ item.fat }}g fat,
-                        {{ item.carbs }}g carbs,
-                        {{ item.fiber }}g fiber
-                    {% endif %}
-                </li>
-            {% endfor %}
-            </ul>
+            {% if meals %}
+                <h4>{{ meal_type }}</h4>
+                <ul>
+                    {% for item in meals %}
+                        <li>
+                            {% if item.food == "AI Recommended Meal" %}
+                                <strong>{{ item.food }}</strong><br>
+                                <pre>{{ item.raw_response }}</pre>
+                            {% else %}
+                                {{ item.food }} - {{ item.calories }} kcal,
+                                {{ item.protein }}g protein,
+                                {{ item.fat }}g fat,
+                                {{ item.carbs }}g carbs,
+                                {{ item.fiber }}g fiber
+                            {% endif %}
+                            {% if item.timestamp %}
+                                <br><small><em>🕒 Logged at {{ item.timestamp }}</em></small>
+                            {% endif %}
+
+                            <!-- Delete Form -->
+                            <form method="POST" action="{% url 'delete_meal' %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="meal_type" value="{{ meal_type }}">
+                                <input type="hidden" name="index" value="{{ forloop.counter0 }}">
+                                <button type="submit">❌ Delete</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         {% endfor %}
     {% else %}
         <p>No meals logged yet.</p>
