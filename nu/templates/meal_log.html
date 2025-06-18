@@ -1,81 +1,124 @@
+{% load custom_tags %}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Meal Logger</title>
+    <title>Meal Log 🍽️</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .meal-section { margin-bottom: 30px; border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+        .meal-header { background: #f5f5f5; padding: 10px; margin: -15px -15px 15px -15px; border-radius: 5px 5px 0 0; }
+        .meal-item { padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .meal-item:last-child { border-bottom: none; }
+        .delete-btn { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+        .delete-btn:hover { background: #c82333; }
+        .summary { background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .form-section { background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 30px; }
+        input, select { padding: 8px; margin: 5px 0; width: 200px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
 </head>
 <body>
-    <h2>Log Your Meals 🍽️</h2>
 
-    <!-- Manual Entry Form -->
+<h1>Meal Log 🍽️</h1>
+
+<!-- 🧾 Form to add a meal -->
+<div class="form-section">
+    <h2>Add New Meal</h2>
     <form method="POST">
         {% csrf_token %}
-        <label>Food Item:</label>
-<input type="text" name="food" placeholder="e.g. 2 Idlis" required><br><br>
-
-
-        <label>Quantity (e.g. 150g):</label>
-        <input type="text" name="quantity" placeholder="e.g. 150g"><br><br>
-
-        <label>Meal Type:</label>
-        <select name="meal_type">
-            <option value="Breakfast">Breakfast</option>
-            <option value="Morning_Snack">Morning Snack</option>
-            <option value="Lunch">Lunch</option>
-            <option value="Evening_Snack">Evening Snack</option>
-            <option value="Dinner">Dinner</option>
+        
+        <label>Food Item:</label><br>
+        <input type="text" name="food" placeholder="e.g. 2 Idlis" required><br><br>
+        
+        <label>Quantity (e.g. 150g):</label><br>
+        <input type="text" name="quantity" placeholder="e.g. 150g" required><br><br>
+        
+        <label>Meal Type:</label><br>
+        <select name="meal_type" required>
+            <option value="">Select meal type</option>
+            {% for meal_name in meal_targets.keys %}
+                <option value="{{ meal_name }}">{{ meal_name }}</option>
+            {% empty %}
+                <option value="Breakfast">Breakfast</option>
+                <option value="Morning Snack">Morning Snack</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Evening Snack">Evening Snack</option>
+                <option value="Dinner">Dinner</option>
+            {% endfor %}
         </select><br><br>
-
+        
         <button type="submit">Add to Log</button>
     </form>
+</div>
 
-    <hr>
+<!-- 📊 Total Summary Section -->
+<div class="summary">
+    <h2>Daily Summary</h2>
+    <p><strong>Calories:</strong> {{ totals.calories|floatformat:0 }} / {{ daily_targets.calories|default:"0"|floatformat:0 }} 
+       ({{ remaining.calories|floatformat:0 }} remaining)</p>
+    <p><strong>Protein:</strong> {{ totals.protein|floatformat:1 }}g / {{ daily_targets.protein|default:"0"|floatformat:1 }}g 
+       ({{ remaining.protein|floatformat:1 }}g remaining)</p>
+    <p><strong>Fat:</strong> {{ totals.fat|floatformat:1 }}g / {{ daily_targets.fat|default:"0"|floatformat:1 }}g 
+       ({{ remaining.fat|floatformat:1 }}g remaining)</p>
+    <p><strong>Carbs:</strong> {{ totals.carbs|floatformat:1 }}g / {{ daily_targets.carbs|default:"0"|floatformat:1 }}g 
+       ({{ remaining.carbs|floatformat:1 }}g remaining)</p>
+    <p><strong>Fiber:</strong> {{ totals.fiber|floatformat:1 }}g / {{ daily_targets.fiber|default:"0"|floatformat:1 }}g 
+       ({{ remaining.fiber|floatformat:1 }}g remaining)</p>
+</div>
 
-    <h3>Logged Meals</h3>
-    {% if logged_meals %}
-        {% for meal_type, meals in logged_meals.items %}
-            {% if meals %}
-                <h4>{{ meal_type }}</h4>
-                <ul>
-                    {% for item in meals %}
-                        <li>
-                            {% if item.food == "AI Recommended Meal" %}
-                                <strong>{{ item.food }}</strong><br>
-                                <pre>{{ item.raw_response }}</pre>
-                            {% else %}
-                                {{ item.food }} - {{ item.calories }} kcal,
-                                {{ item.protein }}g protein,
-                                {{ item.fat }}g fat,
-                                {{ item.carbs }}g carbs,
-                                {{ item.fiber }}g fiber
-                            {% endif %}
-                            {% if item.timestamp %}
-                                <br><small><em>🕒 Logged at {{ item.timestamp }}</em></small>
-                            {% endif %}
+<!-- 🍽️ Logged Meals Section -->
+<h2>Today's Meals</h2>
 
-                            <!-- Delete Form -->
-                            <form method="POST" action="{% url 'delete_meal' %}" style="display:inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="meal_type" value="{{ meal_type }}">
-                                <input type="hidden" name="index" value="{{ forloop.counter0 }}">
-                                <button type="submit">❌ Delete</button>
-                            </form>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endfor %}
-    {% else %}
-        <p>No meals logged yet.</p>
-    {% endif %}
+{% for meal_type, meals in logged_meals.items %}
+    <div class="meal-section">
+        <div class="meal-header">
+            <h3>
+                {{ meal_type }}: 
+                {{ meal_totals|get_item:meal_type|default:"0"|floatformat:0 }} / 
+                {{ meal_targets|get_item:meal_type|default:"0"|floatformat:0 }} kcal
+            </h3>
+        </div>
+        
+        {% if meals %}
+            {% for meal in meals %}
+                <div class="meal-item">
+                    <div>
+                        <strong>{{ meal.food }}</strong><br>
+                        <small>
+                            {{ meal.calories|floatformat:0 }} kcal | 
+                            P: {{ meal.protein|floatformat:1 }}g | 
+                            F: {{ meal.fat|floatformat:1 }}g | 
+                            C: {{ meal.carbs|floatformat:1 }}g | 
+                            Fiber: {{ meal.fiber|floatformat:1 }}g
+                            {% if meal.timestamp %} | {{ meal.timestamp }}{% endif %}
+                        </small>
+                    </div>
+                    
+                    <!-- Delete button -->
+                    <form method="post" action="{% url 'delete_meal' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="meal_type" value="{{ meal_type }}">
+                        <input type="hidden" name="index" value="{{ forloop.counter0 }}">
+                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this meal?')">Delete</button>
+                    </form>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p><em>No meals logged for {{ meal_type }} yet.</em></p>
+        {% endif %}
+    </div>
+{% empty %}
+    <div class="meal-section">
+        <p><em>No meals logged yet. Start by adding your first meal above!</em></p>
+    </div>
+{% endfor %}
 
-    <hr>
-    <h3>Total Daily Intake:</h3>
-    <ul>
-        <li>Calories: {{ totals.calories }} kcal</li>
-        <li>Protein: {{ totals.protein }} g</li>
-        <li>Fat: {{ totals.fat }} g</li>
-        <li>Carbs: {{ totals.carbs }} g</li>
-        <li>Fiber: {{ totals.fiber }} g</li>
-    </ul>
+<!-- Navigation Links -->
+<div style="margin-top: 30px; text-align: center;">
+    <a href="{% url 'profile' %}" style="margin-right: 20px;">← Back to Profile</a>
+    <a href="{% url 'recommend_meal' %}">Get Meal Recommendations →</a>
+</div>
+
 </body>
 </html>
