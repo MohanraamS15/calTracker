@@ -86,13 +86,15 @@ def profile(request):
 @csrf_exempt
 def log_meal(request):
     if request.method == "POST":
-        meal_type = request.POST.get("meal_type", "")
-        food_input = request.POST.get("food_input", "")
-        result = fetch_nutrition_from_perplexity(food_input)
+        meal_type = request.POST.get("meal_type")
+        food = request.POST.get("food")
+        quantity = request.POST.get("quantity")
 
-        # Dummy parse (you can improve formatting later)
-        parsed = {
-            "food": food_input,
+        prompt = f"Find the nutrition info (calories, protein, fat, carbs, fiber) for {quantity} {food}"
+        result = fetch_nutrition_from_perplexity(prompt)
+
+        meal = {
+            "food": f"{quantity} {food}",
             "raw_response": result,
             "calories": extract_number(result, "Calories"),
             "protein": extract_number(result, "Protein"),
@@ -107,8 +109,11 @@ def log_meal(request):
         if meal_type not in request.session["logged_meals"]:
             request.session["logged_meals"][meal_type] = []
 
-        request.session["logged_meals"][meal_type].append(parsed)
+        request.session["logged_meals"][meal_type].append(meal)
         request.session.modified = True
+
+    # Now always show the page
+    logged_meals = request.session.get("logged_meals", {})
 
     # Calculate totals
     totals = {
@@ -119,20 +124,29 @@ def log_meal(request):
         "fiber": 0
     }
 
-    for meals in request.session.get("logged_meals", {}).values():
-        for item in meals:
+    for meal_list in logged_meals.values():
+        for meal in meal_list:
+            totals["calories"] += meal.get("calories", 0)
+            totals["protein"] += meal.get("protein", 0)
+            totals["fat"] += meal.get("fat", 0)
+            totals["carbs"] += meal.get("carbs", 0)
+            totals["fiber"] += meal.get("fiber", 0)
+
+    return render(request, "meal_log.html", {
+    "logged_meals": request.session.get("logged_meals", {}),
+    "totals": calculate_total_macros(request.session.get("logged_meals", {}))
+})
+
+def calculate_total_macros(meals):
+    totals = {"calories": 0, "protein": 0, "fat": 0, "carbs": 0, "fiber": 0}
+    for meal_list in meals.values():
+        for item in meal_list:
             totals["calories"] += item.get("calories", 0)
             totals["protein"] += item.get("protein", 0)
             totals["fat"] += item.get("fat", 0)
             totals["carbs"] += item.get("carbs", 0)
             totals["fiber"] += item.get("fiber", 0)
-
-    print("DEBUG TOTALS:", totals)
-
-    return render(request, "meal_log.html", {
-        "logged_meals": request.session.get("logged_meals", {}),
-        "totals": totals
-    })
+    return totals
 
     
 
@@ -149,19 +163,28 @@ def extract_number(text, key):
 
 @csrf_exempt
 def recommend_meal(request):
-    recommendation = ""
+    recommendation_list = []
+
     if request.method == "POST":
         preference = request.POST.get("preference", "")
         exclusions = request.POST.get("exclusions", "")
         remaining_calories = request.POST.get("remaining_calories", "")
+        selected_meal_type = request.POST.get("meal_type", "Breakfast")
 
         user_prompt = f"""
-        Create a {preference} meal plan for one meal under {remaining_calories} calories.
-        Exclude these ingredients: {exclusions}.
-        Provide the dish name and macro breakdown (Calories, Protein, Fat, Carbs, Fiber).
+        Suggest 2 or 3 {preference} meal options under {remaining_calories} calories.
+        Exclude these: {exclusions}.
+        For each meal, give dish name and macro breakdown: Calories, Protein, Fat, Carbs, Fiber.
         """
 
-        # Call Gemini or Perplexity
-        recommendation = fetch_nutrition_from_perplexity(user_prompt)
+        full_response = fetch_nutrition_from_perplexity(user_prompt)
 
-    return render(request, 'recommend_meal.html', {"recommendation": recommendation})
+        # Split the response into separate meal blocks (assuming AI response is separated by double newlines)
+        raw_meals = [block.strip() for block in full_response.strip().split("\n\n") if block.strip()]
+
+        # Limit to 3 meals max (optional)
+        recommendation_list = raw_meals[:3]
+
+    return render(request, "recommend_meal.html", {
+        "recommendation_list": recommendation_list
+    })

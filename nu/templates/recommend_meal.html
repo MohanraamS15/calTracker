@@ -1,101 +1,59 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html>
 <head>
     <title>AI Meal Recommendation</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f9f9f9;
-            padding: 20px;
-        }
-
-        h2 {
-            color: #333;
-        }
-
-        form {
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            max-width: 500px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            margin-top: 6px;
-            margin-bottom: 16px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-        }
-
-        button {
-            padding: 10px 20px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #218838;
-        }
-
-        .result-box {
-            margin-top: 30px;
-            background: #e9f7ef;
-            padding: 20px;
-            border-radius: 10px;
-            white-space: pre-wrap;
-        }
-
-        .nav-buttons {
-            margin-top: 20px;
-        }
-
-        .nav-buttons a {
-            margin-right: 15px;
-            text-decoration: none;
-        }
-
-        .nav-buttons button {
-            background: #007bff;
-        }
-
-        .nav-buttons button:hover {
-            background: #0069d9;
-        }
-    </style>
 </head>
 <body>
-    <h2>🥗 AI Meal Recommendation</h2>
+    <h2>AI Meal Recommendation 🍱</h2>
 
     <form method="POST" action="{% url 'recommend_meal' %}">
         {% csrf_token %}
-        <label><strong>Calories to Fill:</strong></label><br>
-        <input type="text" name="remaining_calories" placeholder="e.g. 600"><br>
 
-        <label><strong>Preferences (e.g. vegetarian, high-protein):</strong></label><br>
-        <input type="text" name="preference" placeholder="e.g. vegetarian, high-protein"><br>
+        <label>Select Meal Type:</label><br>
+        <select name="meal_type">
+            <option value="Breakfast">Breakfast</option>
+            <option value="Morning_Snack">Morning Snack</option>
+            <option value="Lunch">Lunch</option>
+            <option value="Evening_Snack">Evening Snack</option>
+            <option value="Dinner">Dinner</option>
+        </select><br><br>
 
-        <label><strong>Foods to Avoid:</strong></label><br>
-        <input type="text" name="exclusions" placeholder="e.g. dairy, peanuts"><br>
+        <label>Calories to Fill:</label><br>
+        <input type="text" name="remaining_calories" placeholder="e.g. 600"><br><br>
+
+        <label>Preferences (e.g. vegetarian, high-protein):</label><br>
+        <input type="text" name="preference" placeholder="e.g. vegetarian, high-protein"><br><br>
+
+        <label>Foods to Avoid:</label><br>
+        <input type="text" name="exclusions" placeholder="e.g. dairy, peanuts"><br><br>
 
         <button type="submit">Get Meal Plan</button>
     </form>
 
-    {% if recommendation %}
-        <div class="result-box">
-            <h3>🍴 Recommended Meal Plan:</h3>
-            {{ recommendation|linebreaks }}
-        </div>
+    {% if recommendation_list %}
+        <h3>AI Recommended Meals 🍱</h3>
+        {% for meal in recommendation_list %}
+            <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+                <pre>{{ meal }}</pre>
 
-        <div class="nav-buttons">
-            <a href="{% url 'profile' %}"><button type="button">⬅ Back to Profile</button></a>
-            <a href="{% url 'log_meal' %}"><button type="button">🍽 Log a Meal</button></a>
-        </div>
+                <form method="POST" action="{% url 'log_meal' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="food" value="AI Recommended Meal 🍱">
+                    <input type="hidden" name="quantity" value="{{ meal|escape }}">
+                    
+                    <label>Log this meal under:</label><br>
+                    <select name="meal_type">
+                        <option value="Breakfast">Breakfast</option>
+                        <option value="Morning_Snack">Morning Snack</option>
+                        <option value="Lunch">Lunch</option>
+                        <option value="Evening_Snack">Evening Snack</option>
+                        <option value="Dinner">Dinner</option>
+                    </select><br><br>
+
+                    <button type="submit">Add to Meal Log</button>
+                </form>
+            </div>
+        {% endfor %}
     {% endif %}
 </body>
 </html>
