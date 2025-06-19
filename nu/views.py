@@ -490,25 +490,54 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 
 # Dummy AI recommendation function (replace this with Gemini API)
+import google.generativeai as genai
+
+import os
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+
 def generate_ai_meal_recommendations(meal_type, target_calories, preference, exclusions):
-    base_meals = {
-        "Breakfast": ["Oats with fruits", "Scrambled eggs with toast", "Banana smoothie"],
-        "Morning_Snack": ["Greek yogurt", "Nuts and seeds", "Fruit bowl"],
-        "Lunch": ["Grilled chicken with veggies", "Paneer salad", "Brown rice and dal"],
-        "Evening_Snack": ["Boiled eggs", "Roasted chickpeas", "Protein shake"],
-        "Dinner": ["Grilled fish and salad", "Quinoa with vegetables", "Moong dal khichdi"]
-    }
+    try:
+        client = OpenAI(
+            api_key=os.getenv("PERPLEXITY_API_KEY"),
+            base_url="https://api.perplexity.ai"
+        )
 
-    suggestions = base_meals.get(meal_type, [])[:3]
+        prompt = f"""
+You're a certified dietitian.
+Based on the following inputs:
+- Meal type: {meal_type}
+- Target calories: {target_calories} kcal
+- Preference: {preference}
+- Exclusions: {exclusions if exclusions else 'None'}
 
-    if exclusions:
-        excluded = [x.strip().lower() for x in exclusions.split(",")]
-        suggestions = [m for m in suggestions if not any(e in m.lower() for e in excluded)]
+Give me exactly 3 personalized meal recommendations in **JSON list format** with keys:
+- name (string)
+- calories (number in kcal)
+- protein (grams)
+- fat (grams)
+- fiber (grams)
+- description (1 short sentence)
 
-    if preference:
-        suggestions = [f"{meal} ({preference})" for meal in suggestions]
+Output only the raw JSON list. No extra text.
+"""
 
-    return suggestions if suggestions else ["🥗 No meals matched your preferences. Try fewer restrictions."]
+        response = client.chat.completions.create(
+            model="sonar-pro",
+            messages=[
+                {"role": "system", "content": "You are a certified dietitian."},
+                {"role": "user", "content": prompt.strip()}
+            ]
+        )
+
+        import json
+        return json.loads(response.choices[0].message.content.strip())
+
+    except Exception as e:
+        return [{"name": "❌ Perplexity Error", "description": str(e), "calories": 0, "protein": 0, "fat": 0, "fiber": 0}]
+
 
 @login_required
 @csrf_exempt
