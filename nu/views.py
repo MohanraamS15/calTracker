@@ -349,88 +349,88 @@ def log_meal(request):
 
 
 
-@login_required
-@csrf_exempt
-def recommend_meal(request):
-    recommendation_list = []
-    remaining_calories = request.session.get('daily_targets', {}).get('calories', 2000)
+# @login_required
+# @csrf_exempt
+# def recommend_meal(request):
+#     recommendation_list = []
+#     remaining_calories = request.session.get('daily_targets', {}).get('calories', 2000)
 
-    if request.method == "POST":
-        preference = request.POST.get("preference", "")
-        exclusions = request.POST.get("exclusions", "")
-        remaining_calories = request.POST.get("remaining_calories", str(remaining_calories))
-        selected_meal_type = request.POST.get("meal_type", "Breakfast")
+#     if request.method == "POST":
+#         preference = request.POST.get("preference", "")
+#         exclusions = request.POST.get("exclusions", "")
+#         remaining_calories = request.POST.get("remaining_calories", str(remaining_calories))
+#         selected_meal_type = request.POST.get("meal_type", "Breakfast")
 
-        if not preference:
-            messages.error(request, "Please specify your meal preference")
+#         if not preference:
+#             messages.error(request, "Please specify your meal preference")
             
-            # Get meal data from session for context
-            logged_meals = request.session.get('logged_meals', {})
-            calorie_split = request.session.get('calorie_split', {})
+#             # Get meal data from session for context
+#             logged_meals = request.session.get('logged_meals', {})
+#             calorie_split = request.session.get('calorie_split', {})
 
-            # Calculate meal totals
-            meal_totals = {}
-            for meal_type, meals in logged_meals.items():
-                meal_totals[meal_type] = sum(meal.get('calories', 0) for meal in meals)
+#             # Calculate meal totals
+#             meal_totals = {}
+#             for meal_type, meals in logged_meals.items():
+#                 meal_totals[meal_type] = sum(meal.get('calories', 0) for meal in meals)
 
-            # Normalize meal names for consistency
-            normalized_calorie_split = {}
-            for key, value in calorie_split.items():
-                normalized_key = key.replace(" ", "_")
-                normalized_calorie_split[normalized_key] = value
+#             # Normalize meal names for consistency
+#             normalized_calorie_split = {}
+#             for key, value in calorie_split.items():
+#                 normalized_key = key.replace(" ", "_")
+#                 normalized_calorie_split[normalized_key] = value
 
-            return render(request, "recommend_meal.html", {
-                "recommendation_list": recommendation_list,
-                "remaining_calories": remaining_calories,
-                "meal_targets": normalized_calorie_split,
-                "meal_totals": meal_totals
-            })
+#             return render(request, "recommend_meal.html", {
+#                 "recommendation_list": recommendation_list,
+#                 "remaining_calories": remaining_calories,
+#                 "meal_targets": normalized_calorie_split,
+#                 "meal_totals": meal_totals
+#             })
 
-        user_prompt = f"""
-        Suggest 2 or 3 {preference} meal options under {remaining_calories} calories for {selected_meal_type}.
-        Exclude these: {exclusions}.
-        For each meal, give dish name and macro breakdown: Calories, Protein, Fat, Carbs, Fiber.
-        Format each suggestion clearly with nutritional information.
-        """
+#         user_prompt = f"""
+#         Suggest 2 or 3 {preference} meal options under {remaining_calories} calories for {selected_meal_type}.
+#         Exclude these: {exclusions}.
+#         For each meal, give dish name and macro breakdown: Calories, Protein, Fat, Carbs, Fiber.
+#         Format each suggestion clearly with nutritional information.
+#         """
 
-        try:
-            full_response = fetch_nutrition_from_perplexity(user_prompt)
-            raw_meals = [block.strip() for block in full_response.strip().split("\n\n") if block.strip()]
-            recommendation_list = raw_meals[:3]
+#         try:
+#             full_response = fetch_nutrition_from_perplexity(user_prompt)
+#             raw_meals = [block.strip() for block in full_response.strip().split("\n\n") if block.strip()]
+#             recommendation_list = raw_meals[:3]
             
-            if not recommendation_list:
-                messages.warning(request, "No recommendations found. Try adjusting your preferences.")
+#             if not recommendation_list:
+#                 messages.warning(request, "No recommendations found. Try adjusting your preferences.")
                 
-        except Exception as e:
-            messages.error(request, "Unable to get meal recommendations at this time")
+#         except Exception as e:
+#             messages.error(request, "Unable to get meal recommendations at this time")
 
-    # Get meal data from session for display
-    logged_meals = request.session.get('logged_meals', {})
-    calorie_split = request.session.get('calorie_split', {})
+#     # Get meal data from session for display
+#     logged_meals = request.session.get('logged_meals', {})
+#     calorie_split = request.session.get('calorie_split', {})
 
-    # Calculate meal totals
-    meal_totals = {}
-    for meal_type, meals in logged_meals.items():
-        meal_totals[meal_type] = sum(meal.get('calories', 0) for meal in meals)
+#     # Calculate meal totals
+#     meal_totals = {}
+#     for meal_type, meals in logged_meals.items():
+#         meal_totals[meal_type] = sum(meal.get('calories', 0) for meal in meals)
 
-    # Normalize meal names for consistency (replace spaces with underscores)
-    normalized_calorie_split = {}
-    for key, value in calorie_split.items():
-        normalized_key = key.replace(" ", "_")
-        normalized_calorie_split[normalized_key] = value
+#     # Normalize meal names for consistency (replace spaces with underscores)
+#     normalized_calorie_split = {}
+#     for key, value in calorie_split.items():
+#         normalized_key = key.replace(" ", "_")
+#         normalized_calorie_split[normalized_key] = value
 
-    # Also normalize meal_totals keys
-    normalized_meal_totals = {}
-    for key, value in meal_totals.items():
-        normalized_key = key.replace(" ", "_")
-        normalized_meal_totals[normalized_key] = value
+#     # Also normalize meal_totals keys
+#     normalized_meal_totals = {}
+#     for key, value in meal_totals.items():
+#         normalized_key = key.replace(" ", "_")
+#         normalized_meal_totals[normalized_key] = value
 
-    return render(request, "recommend_meal.html", {
-        "recommendation_list": recommendation_list,
-        "remaining_calories": remaining_calories,
-        "meal_targets": normalized_calorie_split,
-        "meal_totals": normalized_meal_totals
-    })
+#     return render(request, "recommend_meal.html", {
+#         "recommendation_list": recommendation_list,
+#         "remaining_calories": remaining_calories,
+#         "meal_targets": normalized_calorie_split,
+#         "meal_totals": normalized_meal_totals
+#     })
 
 @login_required
 @csrf_exempt
@@ -481,3 +481,101 @@ def split_tdee_view(request):
         "response": response,
         "calorie_split": calorie_split
     })
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+
+# Dummy AI recommendation function (replace this with Gemini API)
+def generate_ai_meal_recommendations(meal_type, target_calories, preference, exclusions):
+    base_meals = {
+        "Breakfast": ["Oats with fruits", "Scrambled eggs with toast", "Banana smoothie"],
+        "Morning_Snack": ["Greek yogurt", "Nuts and seeds", "Fruit bowl"],
+        "Lunch": ["Grilled chicken with veggies", "Paneer salad", "Brown rice and dal"],
+        "Evening_Snack": ["Boiled eggs", "Roasted chickpeas", "Protein shake"],
+        "Dinner": ["Grilled fish and salad", "Quinoa with vegetables", "Moong dal khichdi"]
+    }
+
+    suggestions = base_meals.get(meal_type, [])[:3]
+
+    if exclusions:
+        excluded = [x.strip().lower() for x in exclusions.split(",")]
+        suggestions = [m for m in suggestions if not any(e in m.lower() for e in excluded)]
+
+    if preference:
+        suggestions = [f"{meal} ({preference})" for meal in suggestions]
+
+    return suggestions if suggestions else ["🥗 No meals matched your preferences. Try fewer restrictions."]
+
+@login_required
+@csrf_exempt
+def recommend_meal(request):
+    # Get data from session
+    meal_targets = request.session.get('calorie_split', {})
+    logged_meals = request.session.get('logged_meals', {})
+    
+    # Calculate meal totals
+    meal_totals = {}
+    for meal_type, meals in logged_meals.items():
+        meal_totals[meal_type] = sum(meal.get('calories', 0) for meal in meals)
+    
+    # Normalize meal names for consistency (replace spaces with underscores for template)
+    normalized_meal_targets = {}
+    normalized_meal_totals = {}
+    
+    for key, value in meal_targets.items():
+        normalized_key = key.replace(" ", "_")
+        normalized_meal_targets[normalized_key] = value
+    
+    for key, value in meal_totals.items():
+        normalized_key = key.replace(" ", "_")
+        normalized_meal_totals[normalized_key] = value
+    
+    # Emoji dictionary for meals
+    emoji_dict = {
+        'breakfast': '🍳',
+        'morning_snack': '🍎', 
+        'lunch': '🍽️',
+        'evening_snack': '🥨',
+        'dinner': '🍛'
+    }
+    
+    recommendation_list = []
+    remaining_calories = 600  # default value
+    
+    if request.method == "POST":
+        meal_type = request.POST.get("meal_type")
+        remaining_calories = request.POST.get("remaining_calories")
+        preference = request.POST.get("preference")
+        exclusions = request.POST.get("exclusions", "")
+
+        if not (meal_type and remaining_calories and preference):
+            messages.error(request, "Please fill in all required fields.")
+            return redirect("recommend_meal")
+
+        try:
+            target_kcal = int(remaining_calories)
+        except ValueError:
+            messages.error(request, "Invalid number for calories.")
+            return redirect("recommend_meal")
+
+        # Generate AI meal recommendations using your existing function
+        recommendation_list = generate_ai_meal_recommendations(
+            meal_type, target_kcal, preference, exclusions
+        )
+        
+        # If no recommendations, provide fallback
+        if not recommendation_list:
+            recommendation_list = ["🥗 No meals matched your preferences. Try adjusting your criteria."]
+
+    return render(request, "recommend_meal.html", {
+    "meal_targets": normalized_meal_targets,
+    "meal_totals": normalized_meal_totals,  # Changed from meal_totals to normalized_meal_totals
+    "recommendation_list": recommendation_list,
+    "remaining_calories": remaining_calories,
+    "emoji_dict": emoji_dict,
+})
+
