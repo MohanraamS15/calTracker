@@ -5,7 +5,7 @@ from . import views
 urlpatterns = [
     # Home page
     path('', views.index, name='index'),
-    
+    path('index/', views.index, name='index'),
     # Authentication URLs
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),
@@ -23,3 +23,4 @@ urlpatterns = [
     # TDEE and nutrition URLs
     path('split-tdee/', views.split_tdee_view, name='split_tdee'),
 ]
+

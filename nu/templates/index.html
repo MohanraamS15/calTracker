@@ -1,19 +1,375 @@
 <!DOCTYPE html>
-<html>
-<head><title>Instant Nutrition Checker</title></head>
-<body>
-  <h2>Check Nutrition Instantly 🍽️</h2>
-  <form method="POST" action="{% url 'home' %}">
-    {% csrf_token %}
-    <input type="text" name="food_input" placeholder="Enter food name (e.g. Apple 100g)">
-    <button type="submit">Get Nutrition</button>
-  </form>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalTracker - Instant Nutrition Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  {% if nutrition_data %}
-    <div class="nutrition-result">
-        <p><strong>Nutrition Info:</strong></p>
-        <pre>{{ nutrition_data }}</pre>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-links a:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .nav-links a.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-container {
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+        }
+
+        /* Form Styles */
+        .nutrition-form {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 50px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Results Section */
+        .nutrition-result {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .nutrition-result h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nutrition-result pre {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* About Section */
+        .about-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 3rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .about-section h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .about-section p {
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 0 1rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .nutrition-form {
+                padding: 1.5rem;
+            }
+
+            .main-container {
+                padding: 0 1rem;
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                🍽️ CalTracker
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/index/" class="active">Check Calories</a></li>
+                <li><a href="/login/">Login</a></li>
+                <li><a href="/signup/">Sign Up</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1 class="hero-title">Instant Nutrition Checker 🍽️</h1>
+            <p class="hero-subtitle">Get detailed nutritional information for any food item instantly</p>
+        </div>
+
+        <!-- Nutrition Form -->
+        <div class="nutrition-form">
+            <form method="POST" action="/index/" id="nutritionForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="food_input">Enter Food Item</label>
+                    <input 
+                        type="text" 
+                        name="food_input" 
+                        id="food_input"
+                        class="form-input"
+                        placeholder="e.g., Apple 100g, Chicken breast 150g, Rice 1 cup"
+                        required
+                    >
+                </div>
+                <button type="submit" class="submit-btn">
+                    🔍 Get Nutrition Info
+                </button>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing nutrition data...</p>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        {% if nutrition_data %}
+        <div class="nutrition-result">
+            <h3>📊 Nutrition Information</h3>
+            <pre>{{ nutrition_data }}</pre>
+        </div>
+        {% endif %}
+
+        <!-- About Section -->
+        <div class="about-section">
+            <h2>About CalTracker</h2>
+            <p>CalTracker is your comprehensive nutrition companion that helps you make informed dietary choices. Our advanced system provides instant nutritional analysis for any food item, helping you track calories, macronutrients, and maintain a healthy lifestyle.</p>
+            <p>Whether you're trying to lose weight, gain muscle, or simply eat healthier, CalTracker provides the tools and insights you need to achieve your goals.</p>
+            <p>Join thousands of users who trust CalTracker for their daily nutrition tracking and meal planning needs.</p>
+            <p>Start your journey to better health today - it's simple, fast, and completely free to get started!</p>
+        </div>
     </div>
-  {% endif %}
+
+    <script>
+        // Add loading animation when form is submitted
+        document.getElementById('nutritionForm').addEventListener('submit', function() {
+            document.getElementById('loading').style.display = 'block';
+            document.querySelector('.submit-btn').disabled = true;
+            document.querySelector('.submit-btn').innerHTML = '🔍 Analyzing...';
+        });
+
+        // Add smooth scrolling to results if they exist
+        document.addEventListener('DOMContentLoaded', function() {
+            const result = document.querySelector('.nutrition-result');
+            if (result) {
+                result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        // Auto-focus on input field
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('food_input').focus();
+        });
+
+        // Add enter key support for better UX
+        document.getElementById('food_input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('nutritionForm').submit();
+            }
+        });
+    </script>
 </body>
 </html>

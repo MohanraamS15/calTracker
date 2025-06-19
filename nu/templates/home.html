@@ -5,7 +5,11 @@
     <title>Welcome to CalTracker</title>
 </head>
 <body>
-    <h1>Project is working fine ✅</h1>
-    <p>This is your homepage</p>
+    <ul class="nav-links">
+    <li><a href="{% url 'home' %}" class="active">Home</a></li>
+    <li><a href="{% url 'check_calories' %}">Check Calories</a></li>
+    <li><a href="{% url 'login' %}">Login</a></li>
+    <li><a href="{% url 'signup' %}">Sign Up</a></li>
+</ul>
 </body>
 </html>
