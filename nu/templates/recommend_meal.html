@@ -1,59 +1,586 @@
-<!DOCTYPE html> 
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>AI Meal Recommendation</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Meal Recommendation 🍱</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 25px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .emoji-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            pointer-events: none;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 18px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .recommendations {
+            margin-top: 40px;
+        }
+
+        .recommendations h3 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+        }
+
+        .meal-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .meal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+        }
+
+        .meal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .meal-content {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .log-form {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .log-form select {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .log-btn {
+            background: linear-gradient(135deg, #48c774, #40e0d0);
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .log-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(72, 199, 116, 0.3);
+        }
+
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .meal-breakdown {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .meal-breakdown h4 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .meal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .meal-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .meal-item .emoji {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .meal-item .name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .meal-item .calories {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            color: white;
+            text-decoration: none;
+        }
+
+        .remaining-positive {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .remaining-negative {
+            color: #dc3545;
+            font-weight: 600;
+        
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .header > div {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .back-btn {
+                align-self: center;
+            }
+
+            .form-container {
+                padding: 25px;
+            }
+
+            .log-form {
+                flex-direction: column;
+            }
+
+            .log-form select {
+                min-width: 100%;
+            }
+
+            .meal-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h2>AI Meal Recommendation 🍱</h2>
-
-    <form method="POST" action="{% url 'recommend_meal' %}">
-        {% csrf_token %}
-
-        <label>Select Meal Type:</label><br>
-        <select name="meal_type">
-            <option value="Breakfast">Breakfast</option>
-            <option value="Morning_Snack">Morning Snack</option>
-            <option value="Lunch">Lunch</option>
-            <option value="Evening_Snack">Evening Snack</option>
-            <option value="Dinner">Dinner</option>
-        </select><br><br>
-
-        <label>Calories to Fill:</label><br>
-        <input type="text" name="remaining_calories" placeholder="e.g. 600"><br><br>
-
-        <label>Preferences (e.g. vegetarian, high-protein):</label><br>
-        <input type="text" name="preference" placeholder="e.g. vegetarian, high-protein"><br><br>
-
-        <label>Foods to Avoid:</label><br>
-        <input type="text" name="exclusions" placeholder="e.g. dairy, peanuts"><br><br>
-
-        <button type="submit">Get Meal Plan</button>
-    </form>
-
-    {% if recommendation_list %}
-        <h3>AI Recommended Meals 🍱</h3>
-        {% for meal in recommendation_list %}
-            <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
-                <pre>{{ meal }}</pre>
-
-                <form method="POST" action="{% url 'log_meal' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="food" value="AI Recommended Meal 🍱">
-                    <input type="hidden" name="quantity" value="{{ meal|escape }}">
-                    
-                    <label>Log this meal under:</label><br>
-                    <select name="meal_type">
-                        <option value="Breakfast">Breakfast</option>
-                        <option value="Morning_Snack">Morning Snack</option>
-                        <option value="Lunch">Lunch</option>
-                        <option value="Evening_Snack">Evening Snack</option>
-                        <option value="Dinner">Dinner</option>
-                    </select><br><br>
-
-                    <button type="submit">Add to Meal Log</button>
-                </form>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h1 style="margin: 0;">🍱 AI Meal Recommendation</h1>
+                <a href="{% url 'log_meal' %}" class="back-btn">
+                    ← Back to Meal Log
+                </a>
             </div>
-        {% endfor %}
-    {% endif %}
+            <p>Get personalized meal suggestions powered by AI</p>
+        </div>
+
+        <div class="form-container">
+            <!-- Messages -->
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="message {{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Meal Breakdown Display -->
+            {% if meal_targets and meal_totals %}
+                <div class="meal-breakdown">
+                    <h4>📊 Today's Meal Progress</h4>
+                    <div class="meal-grid">
+                        <div class="meal-item">
+                            <div class="emoji">🌅</div>
+                            <div class="name">Breakfast</div>
+                            <div class="calories">
+                                Target: {{ meal_targets.Breakfast|default:0|floatformat:0 }}kcal<br>
+                                Consumed: {{ meal_totals.Breakfast|default:0|floatformat:0 }}kcal<br>
+                                <span class="{% if meal_targets.Breakfast|default:0|add:meal_totals.Breakfast|default:0|floatformat:0 >= 0 %}remaining-positive{% else %}remaining-negative{% endif %}">
+                                    Remaining: {{ meal_targets.Breakfast|default:0|add:"-"|add:meal_totals.Breakfast|default:0|floatformat:0 }}kcal
+                                </span>
+                            </div>
+                        </div>
+                        <div class="meal-item">
+                            <div class="emoji">☕</div>
+                            <div class="name">Morning Snack</div>
+                            <div class="calories">
+                                Target: {{ meal_targets.Morning_Snack|default:0|floatformat:0 }}kcal<br>
+                                Consumed: {{ meal_totals.Morning_Snack|default:0|floatformat:0 }}kcal<br>
+                                <span class="{% if meal_targets.Morning_Snack|default:0|add:meal_totals.Morning_Snack|default:0|floatformat:0 >= 0 %}remaining-positive{% else %}remaining-negative{% endif %}">
+                                    Remaining: {{ meal_targets.Morning_Snack|default:0|add:"-"|add:meal_totals.Morning_Snack|default:0|floatformat:0 }}kcal
+                                </span>
+                            </div>
+                        </div>
+                        <div class="meal-item">
+                            <div class="emoji">🌞</div>
+                            <div class="name">Lunch</div>
+                            <div class="calories">
+                                Target: {{ meal_targets.Lunch|default:0|floatformat:0 }}kcal<br>
+                                Consumed: {{ meal_totals.Lunch|default:0|floatformat:0 }}kcal<br>
+                                <span class="{% if meal_targets.Lunch|default:0|add:meal_totals.Lunch|default:0|floatformat:0 >= 0 %}remaining-positive{% else %}remaining-negative{% endif %}">
+                                    Remaining: {{ meal_targets.Lunch|default:0|add:"-"|add:meal_totals.Lunch|default:0|floatformat:0 }}kcal
+                                </span>
+                            </div>
+                        </div>
+                        <div class="meal-item">
+                            <div class="emoji">🍎</div>
+                            <div class="name">Evening Snack</div>
+                            <div class="calories">
+                                Target: {{ meal_targets.Evening_Snack|default:0|floatformat:0 }}kcal<br>
+                                Consumed: {{ meal_totals.Evening_Snack|default:0|floatformat:0 }}kcal<br>
+                                <span class="{% if meal_targets.Evening_Snack|default:0|add:meal_totals.Evening_Snack|default:0|floatformat:0 >= 0 %}remaining-positive{% else %}remaining-negative{% endif %}">
+                                    Remaining: {{ meal_targets.Evening_Snack|default:0|add:"-"|add:meal_totals.Evening_Snack|default:0|floatformat:0 }}kcal
+                                </span>
+                            </div>
+                        </div>
+                        <div class="meal-item">
+                            <div class="emoji">🌙</div>
+                            <div class="name">Dinner</div>
+                            <div class="calories">
+                                Target: {{ meal_targets.Dinner|default:0|floatformat:0 }}kcal<br>
+                                Consumed: {{ meal_totals.Dinner|default:0|floatformat:0 }}kcal<br>
+                                <span class="{% if meal_targets.Dinner|default:0|add:meal_totals.Dinner|default:0|floatformat:0 >= 0 %}remaining-positive{% else %}remaining-negative{% endif %}">
+                                    Remaining: {{ meal_targets.Dinner|default:0|add:"-"|add:meal_totals.Dinner|default:0|floatformat:0 }}kcal
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'recommend_meal' %}" id="recommendForm">
+                {% csrf_token %}
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="meal_type">🍽️ Select Meal Type</label>
+                        <select name="meal_type" id="meal_type" required>
+                            <option value="">Choose meal type...</option>
+                            {% if meal_targets and meal_totals %}
+                                <option value="Breakfast">🌅 Breakfast ({{ meal_targets.Breakfast|default:0|floatformat:0 }} target, {{ meal_totals.Breakfast|default:0|floatformat:0 }} consumed, {{ meal_targets.Breakfast|default:0|add:meal_totals.Breakfast|default:0|floatformat:0|add:"-"|add:meal_totals.Breakfast|default:0|floatformat:0 }} remaining)</option>
+                                <option value="Morning_Snack">☕ Morning Snack ({{ meal_targets.Morning_Snack|default:0|floatformat:0 }} target, {{ meal_totals.Morning_Snack|default:0|floatformat:0 }} consumed, {{ meal_targets.Morning_Snack|default:0|add:meal_totals.Morning_Snack|default:0|floatformat:0|add:"-"|add:meal_totals.Morning_Snack|default:0|floatformat:0 }} remaining)</option>
+                                <option value="Lunch">🌞 Lunch ({{ meal_targets.Lunch|default:0|floatformat:0 }} target, {{ meal_totals.Lunch|default:0|floatformat:0 }} consumed, {{ meal_targets.Lunch|default:0|add:meal_totals.Lunch|default:0|floatformat:0|add:"-"|add:meal_totals.Lunch|default:0|floatformat:0 }} remaining)</option>
+                                <option value="Evening_Snack">🍎 Evening Snack ({{ meal_targets.Evening_Snack|default:0|floatformat:0 }} target, {{ meal_totals.Evening_Snack|default:0|floatformat:0 }} consumed, {{ meal_targets.Evening_Snack|default:0|add:meal_totals.Evening_Snack|default:0|floatformat:0|add:"-"|add:meal_totals.Evening_Snack|default:0|floatformat:0 }} remaining)</option>
+                                <option value="Dinner">🌙 Dinner ({{ meal_targets.Dinner|default:0|floatformat:0 }} target, {{ meal_totals.Dinner|default:0|floatformat:0 }} consumed, {{ meal_targets.Dinner|default:0|add:meal_totals.Dinner|default:0|floatformat:0|add:"-"|add:meal_totals.Dinner|default:0|floatformat:0 }} remaining)</option>
+                            {% else %}
+                                <option value="Breakfast">🌅 Breakfast</option>
+                                <option value="Morning_Snack">☕ Morning Snack</option>
+                                <option value="Lunch">🌞 Lunch</option>
+                                <option value="Evening_Snack">🍎 Evening Snack</option>
+                                <option value="Dinner">🌙 Dinner</option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="remaining_calories">🔥 Target Calories</label>
+                        <input type="number" name="remaining_calories" id="remaining_calories" 
+                               placeholder="e.g. 600" min="50" max="2000" value="{{ remaining_calories }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="preference">💫 Meal Preferences</label>
+                        <input type="text" name="preference" id="preference" 
+                               placeholder="e.g. vegetarian, high-protein, keto, Mediterranean" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="exclusions">🚫 Foods to Avoid (Optional)</label>
+                        <input type="text" name="exclusions" id="exclusions" 
+                               placeholder="e.g. dairy, nuts, gluten, shellfish">
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    🤖 Generate AI Recommendations
+                </button>
+            </form>
+
+            <!-- Loading indicator -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>AI is crafting your perfect meal recommendations...</p>
+            </div>
+
+            <!-- Recommendations -->
+            {% if recommendation_list %}
+                <div class="recommendations">
+                    <h3>🎯 Your Personalized Meal Recommendations</h3>
+                    
+                    {% for meal in recommendation_list %}
+                        <div class="meal-card">
+                            <div class="meal-content">{{ meal }}</div>
+                            
+                            <form method="POST" action="{% url 'log_meal' %}" class="log-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="food" value="AI Recommended Meal 🤖">
+                                <input type="hidden" name="quantity" value="{{ meal|escape }}">
+                                
+                                <div class="form-group" style="margin: 0; flex: 1;">
+                                    <label for="log_meal_{{ forloop.counter }}">Log to:</label>
+                                    <select name="meal_type" id="log_meal_{{ forloop.counter }}" required>
+                                        <option value="Breakfast">🌅 Breakfast</option>
+                                        <option value="Morning_Snack">☕ Morning Snack</option>
+                                        <option value="Lunch">🌞 Lunch</option>
+                                        <option value="Evening_Snack">🍎 Evening Snack</option>
+                                        <option value="Dinner">🌙 Dinner</option>
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" class="log-btn">
+                                    ➕ Add to Log
+                                </button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Show loading spinner on form submit
+        document.getElementById('recommendForm').addEventListener('submit', function() {
+            document.getElementById('loading').style.display = 'block';
+            document.querySelector('.submit-btn').disabled = true;
+            document.querySelector('.submit-btn').innerHTML = '🔄 Generating...';
+        });
+
+        // Auto-hide messages after 5 seconds
+        setTimeout(function() {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(function(message) {
+                message.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(function() {
+                    message.remove();
+                }, 300);
+            });
+        }, 5000);
+
+        // Add slideOut animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideOut {
+                from {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateX(-20px);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>

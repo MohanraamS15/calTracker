@@ -8,6 +8,9 @@ from django.db import IntegrityError
 from .utils import fetch_nutrition_from_perplexity
 import json, re, datetime
 
+def home(request):
+    return render(request, 'home.html')  # Make sure home.html exists!
+
 @csrf_exempt
 def index(request):
     nutrition_data = ""
@@ -250,15 +253,23 @@ def profile(request):
     else:
         return redirect('login')
 
+
+
+def extract_number(text, key):
+    """Extracts a float number after a keyword like 'calories', 'protein' etc."""
+    try:
+        pattern = rf"{key}:\s*([0-9]+(?:\.[0-9]*)?)"
+        match = re.search(pattern, text, re.IGNORECASE)
+        return float(match.group(1)) if match else 0
+    except:
+        return 0
+
 @login_required
-@csrf_exempt
 def log_meal(request):
     if 'logged_meals' not in request.session:
         request.session['logged_meals'] = {}
 
     logged_meals = request.session['logged_meals']
-
-    # Normalize old keys: "Morning_Snack" → "Morning Snack"
     normalized_meals = {}
     for k, v in logged_meals.items():
         normalized_key = k.replace("_", " ")
@@ -271,7 +282,6 @@ def log_meal(request):
     calorie_split = request.session.get('calorie_split', {})
     daily_targets = request.session.get('daily_targets', {})
 
-    # Redirect to profile if no targets set
     if not daily_targets:
         messages.info(request, "Please set up your profile first")
         return redirect('profile_view')
@@ -285,17 +295,15 @@ def log_meal(request):
             messages.error(request, "Please enter both food and quantity")
             return redirect('log_meal')
 
-        # Get actual nutrition data
         nutrition_query = f"{quantity} {food}"
-        nutrition_response = fetch_nutrition_from_perplexity(f"Nutrition facts for {nutrition_query}")
-        
-        # Parse nutrition data
+        response = fetch_nutrition_from_perplexity(f"Nutrition facts for {nutrition_query}")
+
         nutrition = {
-            'calories': extract_number(nutrition_response, 'calories') or 100,
-            'protein': extract_number(nutrition_response, 'protein') or 5,
-            'fat': extract_number(nutrition_response, 'fat') or 2,
-            'carbs': extract_number(nutrition_response, 'carbs') or 20,
-            'fiber': extract_number(nutrition_response, 'fiber') or 1,
+            'calories': extract_number(response, 'calories') or 100,
+            'protein': extract_number(response, 'protein') or 5,
+            'fat': extract_number(response, 'fat') or 2,
+            'carbs': extract_number(response, 'carbs') or 20,
+            'fiber': extract_number(response, 'fiber') or 1,
             'food': f"{quantity} {food}",
             'timestamp': datetime.datetime.now().strftime("%I:%M %p")
         }
@@ -310,16 +318,12 @@ def log_meal(request):
         messages.success(request, f"Added {food} to {meal_type}")
         return redirect('log_meal')
 
-    # Calculate totals per meal and overall
-    meal_totals = {}
-    for meal in calorie_split.keys():
-        meal_totals[meal] = 0
-    
+    # Totals
+    meal_totals = {meal: 0 for meal in calorie_split}
     totals = {'calories': 0, 'protein': 0, 'fat': 0, 'carbs': 0, 'fiber': 0}
 
     for meal_type, meals in logged_meals.items():
-        if meal_type not in meal_totals:
-            meal_totals[meal_type] = 0
+        meal_totals.setdefault(meal_type, 0)
         for meal in meals:
             meal_totals[meal_type] += meal.get('calories', 0)
             totals['calories'] += meal.get('calories', 0)
@@ -328,10 +332,10 @@ def log_meal(request):
             totals['carbs'] += meal.get('carbs', 0)
             totals['fiber'] += meal.get('fiber', 0)
 
-    # Calculate remaining goals
-    remaining = {}
-    for key in totals:
-        remaining[key] = round(daily_targets.get(key, 0) - totals.get(key, 0), 1)
+    remaining = {
+        key: round(daily_targets.get(key, 0) - totals.get(key, 0), 1)
+        for key in totals
+    }
 
     context = {
         'logged_meals': logged_meals,
@@ -339,19 +343,11 @@ def log_meal(request):
         'remaining': remaining,
         'meal_targets': calorie_split,
         'meal_totals': meal_totals,
-        'user': request.user,
+        'daily_targets': daily_targets,
     }
-
     return render(request, 'meal_log.html', context)
 
-def extract_number(text, key):
-    """Helper function to extract numbers from nutrition text"""
-    try:
-        pattern = rf"{key}:\s*([0-9]+(?:\.[0-9]*)?)"
-        match = re.search(pattern, text, re.IGNORECASE)
-        return float(match.group(1)) if match else 0
-    except:
-        return 0
+
 
 @login_required
 @csrf_exempt
@@ -367,15 +363,34 @@ def recommend_meal(request):
 
         if not preference:
             messages.error(request, "Please specify your meal preference")
+            
+            # Get meal data from session for context
+            logged_meals = request.session.get('logged_meals', {})
+            calorie_split = request.session.get('calorie_split', {})
+
+            # Calculate meal totals
+            meal_totals = {}
+            for meal_type, meals in logged_meals.items():
+                meal_totals[meal_type] = sum(meal.get('calories', 0) for meal in meals)
+
+            # Normalize meal names for consistency
+            normalized_calorie_split = {}
+            for key, value in calorie_split.items():
+                normalized_key = key.replace(" ", "_")
+                normalized_calorie_split[normalized_key] = value
+
             return render(request, "recommend_meal.html", {
                 "recommendation_list": recommendation_list,
-                "remaining_calories": remaining_calories
+                "remaining_calories": remaining_calories,
+                "meal_targets": normalized_calorie_split,
+                "meal_totals": meal_totals
             })
 
         user_prompt = f"""
-        Suggest 2 or 3 {preference} meal options under {remaining_calories} calories.
+        Suggest 2 or 3 {preference} meal options under {remaining_calories} calories for {selected_meal_type}.
         Exclude these: {exclusions}.
         For each meal, give dish name and macro breakdown: Calories, Protein, Fat, Carbs, Fiber.
+        Format each suggestion clearly with nutritional information.
         """
 
         try:
@@ -389,9 +404,32 @@ def recommend_meal(request):
         except Exception as e:
             messages.error(request, "Unable to get meal recommendations at this time")
 
+    # Get meal data from session for display
+    logged_meals = request.session.get('logged_meals', {})
+    calorie_split = request.session.get('calorie_split', {})
+
+    # Calculate meal totals
+    meal_totals = {}
+    for meal_type, meals in logged_meals.items():
+        meal_totals[meal_type] = sum(meal.get('calories', 0) for meal in meals)
+
+    # Normalize meal names for consistency (replace spaces with underscores)
+    normalized_calorie_split = {}
+    for key, value in calorie_split.items():
+        normalized_key = key.replace(" ", "_")
+        normalized_calorie_split[normalized_key] = value
+
+    # Also normalize meal_totals keys
+    normalized_meal_totals = {}
+    for key, value in meal_totals.items():
+        normalized_key = key.replace(" ", "_")
+        normalized_meal_totals[normalized_key] = value
+
     return render(request, "recommend_meal.html", {
         "recommendation_list": recommendation_list,
-        "remaining_calories": remaining_calories
+        "remaining_calories": remaining_calories,
+        "meal_targets": normalized_calorie_split,
+        "meal_totals": normalized_meal_totals
     })
 
 @login_required
