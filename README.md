@@ -17,9 +17,8 @@ Live Demo 👉 [caltracker-yuau.onrender.com](https://caltracker-yuau.onrender.c
 - ✅ Food Exclusion Filters (e.g. No Eggs, No Sugar)
 - ✅ Per-Meal Calorie Target System
 - ✅ Full-Day Nutrition Summary (Calories, Protein, Carbs, Fats, Fiber)
-- ✅ Meal History View with Timestamped Logs
 - ✅ PostgreSQL support for production
-- 🔄 Fully Functional UI (Responsiveness in progress)
+- ✅ Fully Functional UI
 
 ---
 
