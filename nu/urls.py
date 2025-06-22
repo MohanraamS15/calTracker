@@ -20,7 +20,7 @@ urlpatterns = [
     path('log-meal/', views.log_meal, name='log_meal'),
     path('delete-meal/', views.delete_meal, name='delete_meal'),
     path('recommend-meal/', views.recommend_meal, name='recommend_meal'),
-    
+path('meal-history/', views.meal_history, name='meal_history'),
     # TDEE and nutrition URLs
     path('split-tdee/', views.split_tdee_view, name='split_tdee'),
 ]

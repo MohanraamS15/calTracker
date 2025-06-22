@@ -48,13 +48,13 @@ def generate_ai_meal_recommendations(meal_type, target_calories, preference, exc
 You're a certified dietitian.
 Based on the following inputs:
 - Meal type: {meal_type}
-- Target calories: {target_calories} kcal
+- Target calories: {target_calories} in  cal
 - Preference: {preference}
 - Exclusions: {exclusions if exclusions else 'None'}
 
 Give me exactly 3 personalized meal recommendations in **JSON list format** with keys:
 - name (string)
-- calories (number in kcal)
+- calories (number in cal)
 - protein (grams)
 - fat (grams)
 - fiber (grams)

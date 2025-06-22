@@ -6,7 +6,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import IntegrityError
 from .utils import fetch_nutrition_from_perplexity
+from .models import MealLog, UserProfile
 import json, re, datetime
+from django.utils import timezone
+from collections import defaultdict
 
 def home(request):
     return render(request, 'home.html')  # Make sure home.html exists!
@@ -150,9 +153,9 @@ def logout_view(request):
     return redirect("login")
 
 @login_required
-@csrf_exempt
+
 def profile_view(request):
-    """Enhanced profile view for authenticated users"""
+    """Enhanced profile view for authenticated users, now stores in DB"""
     if request.method == "POST":
         try:
             # Get and validate user input
@@ -192,9 +195,7 @@ def profile_view(request):
             - Dinner
             Give the ideal calorie distribution per meal as JSON format only.
             """
-            
             response = fetch_nutrition_from_perplexity(prompt)
-            
             try:
                 match = re.search(r'\{.*\}', response, re.DOTALL)
                 if match:
@@ -211,7 +212,7 @@ def profile_view(request):
                     "Dinner": int(tdee * 0.25)
                 }
 
-            # Store in session
+            # Store in session (for quick access)
             request.session['calorie_split'] = calorie_split
             request.session['daily_targets'] = {
                 "calories": tdee,
@@ -221,28 +222,54 @@ def profile_view(request):
                 "fiber": fiber
             }
             request.session['tdee'] = tdee
-            request.session['user_profile'] = {
-                "current_weight": current_weight,
-                "target_weight": target_weight,
-                "height": height,
-                "age": age,
-                "gender": gender,
-                "activity_level": activity_level,
-                "goal": goal
-            }
+
+            # Store in database
+            profile, created = UserProfile.objects.update_or_create(
+                user=request.user,
+                defaults={
+                    "current_weight": current_weight,
+                    "target_weight": target_weight,
+                    "height": height,
+                    "age": age,
+                    "gender": gender,
+                    "activity_level": activity_level,
+                    "goal": goal,
+                    "daily_targets": {
+                        "calories": tdee,
+                        "protein": protein,
+                        "fat": fat,
+                        "carbs": carbs,
+                        "fiber": fiber
+                    },
+                    "calorie_split": calorie_split
+                }
+            )
 
             messages.success(request, "Profile updated successfully!")
             return redirect('log_meal')
-            
+
         except ValueError as e:
             messages.error(request, "Please enter valid numeric values")
             return render(request, "profile.html")
         except Exception as e:
             messages.error(request, "An error occurred while updating your profile")
             return render(request, "profile.html")
-    
-    # Get existing profile data from session if available
-    user_profile = request.session.get('user_profile', {})
+
+    # Get existing profile data from DB if available
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        user_profile = {
+            "current_weight": profile.current_weight,
+            "target_weight": profile.target_weight,
+            "height": profile.height,
+            "age": profile.age,
+            "gender": profile.gender,
+            "activity_level": profile.activity_level,
+            "goal": profile.goal
+        }
+    except UserProfile.DoesNotExist:
+        user_profile = {}
+
     return render(request, "profile.html", {"user_profile": user_profile})
 
 @csrf_exempt
@@ -266,21 +293,32 @@ def extract_number(text, key):
 
 @login_required
 def log_meal(request):
-    if 'logged_meals' not in request.session:
-        request.session['logged_meals'] = {}
+    today = timezone.now().date()
+    user = request.user
 
-    logged_meals = request.session['logged_meals']
-    normalized_meals = {}
-    for k, v in logged_meals.items():
-        normalized_key = k.replace("_", " ")
-        if normalized_key not in normalized_meals:
-            normalized_meals[normalized_key] = []
-        normalized_meals[normalized_key].extend(v)
-    logged_meals = normalized_meals
-    request.session['logged_meals'] = logged_meals
+    # Fetch UserProfile
+    try:
+        profile = UserProfile.objects.get(user=user)
+        calorie_split = profile.calorie_split or {}
+        daily_targets = profile.daily_targets or {}
+    except UserProfile.DoesNotExist:
+        calorie_split = {}
+        daily_targets = {}
 
-    calorie_split = request.session.get('calorie_split', {})
-    daily_targets = request.session.get('daily_targets', {})
+    # Fetch today's meals from DB
+    meal_logs = MealLog.objects.filter(user=user, date=today)
+    logged_meals = {}
+    for log in meal_logs:
+        logged_meals.setdefault(log.meal_type, []).append({
+            'food': log.food,
+            'quantity': log.quantity,
+            'calories': log.calories,
+            'protein': log.protein,
+            'fat': log.fat,
+            'carbs': log.carbs,
+            'fiber': log.fiber,
+            'timestamp': log.timestamp.strftime("%I:%M %p"),
+        })
 
     if not daily_targets:
         messages.info(request, "Please set up your profile first")
@@ -289,7 +327,7 @@ def log_meal(request):
     if request.method == 'POST':
         food = request.POST.get('food', '').strip()
         quantity = request.POST.get('quantity', '').strip()
-        meal_type = request.POST.get('meal_type', '').replace("_", " ")
+        meal_type = request.POST.get('meal_type', '')
 
         if not food or not quantity:
             messages.error(request, "Please enter both food and quantity")
@@ -304,16 +342,21 @@ def log_meal(request):
             'fat': extract_number(response, 'fat') or 2,
             'carbs': extract_number(response, 'carbs') or 20,
             'fiber': extract_number(response, 'fiber') or 1,
-            'food': f"{quantity} {food}",
-            'timestamp': datetime.datetime.now().strftime("%I:%M %p")
         }
 
-        if meal_type not in logged_meals:
-            logged_meals[meal_type] = []
-
-        logged_meals[meal_type].append(nutrition)
-        request.session['logged_meals'] = logged_meals
-        request.session.modified = True
+        # Save to DB
+        MealLog.objects.create(
+            user=user,
+            meal_type=meal_type,
+            food=food,
+            quantity=quantity,
+            calories=nutrition['calories'],
+            protein=nutrition['protein'],
+            fat=nutrition['fat'],
+            carbs=nutrition['carbs'],
+            fiber=nutrition['fiber'],
+            date=today
+        )
 
         messages.success(request, f"Added {food} to {meal_type}")
         return redirect('log_meal')
@@ -439,14 +482,17 @@ def delete_meal(request):
         meal_type = request.POST.get("meal_type")
         index = int(request.POST.get("index"))
 
-        if "logged_meals" in request.session:
-            meals = request.session["logged_meals"].get(meal_type, [])
-            if 0 <= index < len(meals):
-                deleted_meal = meals.pop(index)
-                request.session.modified = True
-                messages.success(request, f"Removed {deleted_meal.get('food', 'meal')} from {meal_type}")
-            else:
-                messages.error(request, "Meal not found")
+        today = timezone.now().date()
+        user = request.user
+
+        # Get all meals for this user, meal_type, and today, ordered by timestamp
+        meal_qs = MealLog.objects.filter(user=user, meal_type=meal_type, date=today).order_by('timestamp')
+        if 0 <= index < meal_qs.count():
+            meal_to_delete = meal_qs[index]
+            meal_to_delete.delete()
+            messages.success(request, f"Removed {meal_to_delete.food} from {meal_type}")
+        else:
+            messages.error(request, "Meal not found")
 
         return redirect("log_meal")
 
@@ -542,27 +588,52 @@ Output only the raw JSON list. No extra text.
 @login_required
 @csrf_exempt
 def recommend_meal(request):
-    # Get data from session
+    user = request.user
+    today = timezone.now().date()
+
+    # Get calorie split and daily targets from the user's profile/session
+    profile = None
+    try:
+        profile = UserProfile.objects.get(user=user)
+    except UserProfile.DoesNotExist:
+        messages.info(request, "Please set up your profile first.")
+        return redirect("profile_view")
+
     meal_targets = request.session.get('calorie_split', {})
-    logged_meals = request.session.get('logged_meals', {})
-    
+    if not meal_targets:
+        messages.info(request, "Please set up your profile first.")
+        return redirect("profile_view")
+
+    # Fetch today's meals from the database
+    meal_logs = MealLog.objects.filter(user=user, date=today)
+    logged_meals = {}
+    for log in meal_logs:
+        logged_meals.setdefault(log.meal_type, []).append({
+            'food': log.food,
+            'quantity': log.quantity,
+            'calories': log.calories,
+            'protein': log.protein,
+            'fat': log.fat,
+            'carbs': log.carbs,
+            'fiber': log.fiber,
+            'timestamp': log.timestamp.strftime("%I:%M %p"),
+        })
+
     # Calculate meal totals
     meal_totals = {}
     for meal_type, meals in logged_meals.items():
         meal_totals[meal_type] = sum(meal.get('calories', 0) for meal in meals)
-    
+
     # Normalize meal names for consistency (replace spaces with underscores for template)
     normalized_meal_targets = {}
     normalized_meal_totals = {}
-    
     for key, value in meal_targets.items():
         normalized_key = key.replace(" ", "_")
         normalized_meal_targets[normalized_key] = value
-    
     for key, value in meal_totals.items():
         normalized_key = key.replace(" ", "_")
         normalized_meal_totals[normalized_key] = value
-    
+
     # Emoji dictionary for meals
     emoji_dict = {
         'breakfast': '🍳',
@@ -571,10 +642,10 @@ def recommend_meal(request):
         'evening_snack': '🥨',
         'dinner': '🍛'
     }
-    
+
     recommendation_list = []
     remaining_calories = 600  # default value
-    
+
     if request.method == "POST":
         meal_type = request.POST.get("meal_type")
         remaining_calories = request.POST.get("remaining_calories")
@@ -607,4 +678,46 @@ def recommend_meal(request):
     "remaining_calories": remaining_calories,
     "emoji_dict": emoji_dict,
 })
+
+@login_required
+def meal_history(request):
+    user = request.user
+
+    # Fetch UserProfile
+    try:
+        profile = UserProfile.objects.get(user=user)
+        daily_targets = profile.daily_targets or {}
+    except UserProfile.DoesNotExist:
+        daily_targets = {}
+
+    meal_logs = MealLog.objects.filter(user=user).order_by('-date', 'timestamp')
+
+    # Group meals by date and calculate daily totals
+    daily_summaries = []
+    days = defaultdict(list)
+    for log in meal_logs:
+        days[log.date].append(log)
+
+    for date, logs in sorted(days.items(), reverse=True):
+        totals = {'calories': 0, 'protein': 0, 'fat': 0, 'carbs': 0, 'fiber': 0}
+        for log in logs:
+            totals['calories'] += log.calories
+            totals['protein'] += log.protein
+            totals['fat'] += log.fat
+            totals['carbs'] += log.carbs
+            totals['fiber'] += log.fiber
+        daily_summaries.append({
+            'date': date,
+            'totals': totals,
+            'meal_count': len(logs),
+        })
+
+
+
+    context = {
+        'daily_summaries': daily_summaries,
+        'daily_targets': daily_targets,
+        'today': timezone.now().date(),
+    }
+    return render(request, "meal_history.html", context)
 
