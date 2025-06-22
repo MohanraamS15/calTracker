@@ -71,21 +71,25 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .welcome-user {
             color: #374151;
             font-size: 18px;
             font-weight: 600;
+            flex-shrink: 0;
         }
 
         .nav-links {
             display: flex;
-            gap: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .nav-btn {
-            padding: 10px 20px;
+            padding: 10px 16px;
             background: linear-gradient(135deg, #8B5CF6, #EC4899);
             color: white;
             text-decoration: none;
@@ -94,6 +98,8 @@
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
         }
 
         .nav-btn:hover {
@@ -158,6 +164,7 @@
             display: flex;
             gap: 20px;
             margin-top: 8px;
+            flex-wrap: wrap;
         }
 
         .radio-option {
@@ -165,6 +172,7 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
+            flex-shrink: 0;
         }
 
         .radio-option input[type="radio"] {
@@ -175,6 +183,7 @@
             border-radius: 50%;
             position: relative;
             cursor: pointer;
+            flex-shrink: 0;
         }
 
         .radio-option input[type="radio"]:checked {
@@ -198,6 +207,7 @@
             margin: 0;
             cursor: pointer;
             font-size: 16px;
+            white-space: nowrap;
         }
 
         .submit-btn {
@@ -266,24 +276,184 @@
             font-size: 14px;
         }
 
+        /* Tablet styles */
+        @media (max-width: 1024px) {
+            .container {
+                max-width: 90%;
+            }
+            
+            .profile-card {
+                padding: 30px;
+            }
+        }
+
+        /* Mobile styles */
         @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
+            body {
+                padding: 10px;
+            }
+            
+            .profile-card {
+                padding: 20px;
+                border-radius: 15px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .header p {
+                font-size: 14px;
             }
             
             .nav-header {
                 flex-direction: column;
-                gap: 15px;
                 text-align: center;
+                gap: 20px;
+            }
+            
+            .welcome-user {
+                font-size: 16px;
+                order: 1;
             }
             
             .nav-links {
                 justify-content: center;
+                order: 2;
+                gap: 8px;
+            }
+            
+            .nav-btn {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                margin-bottom: 20px;
+            }
+            
+            .form-group {
+                margin-bottom: 16px;
+            }
+            
+            .form-input, .form-select {
+                padding: 14px;
+                font-size: 16px; /* Prevents zoom on iOS */
             }
             
             .radio-group {
                 flex-direction: column;
                 gap: 12px;
+            }
+            
+            .radio-option {
+                justify-content: flex-start;
+            }
+            
+            .submit-btn {
+                padding: 14px;
+                font-size: 16px;
+            }
+            
+            .info-box {
+                padding: 12px;
+                font-size: 13px;
+            }
+        }
+
+        /* Small mobile styles */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
+            .profile-card {
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+            
+            .header {
+                margin-bottom: 25px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                width: 100%;
+                gap: 8px;
+            }
+            
+            .nav-btn {
+                width: 100%;
+                text-align: center;
+                padding: 10px;
+            }
+            
+            .form-input, .form-select {
+                padding: 12px;
+            }
+            
+            .form-select {
+                background-position: right 8px center;
+                padding-right: 30px;
+            }
+            
+            .welcome-user {
+                font-size: 14px;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 360px) {
+            .profile-card {
+                padding: 12px;
+            }
+            
+            .header h1 {
+                font-size: 18px;
+            }
+            
+            .header p {
+                font-size: 12px;
+            }
+            
+            .nav-btn {
+                font-size: 12px;
+                padding: 8px;
+            }
+            
+            .form-input, .form-select {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .radio-option label {
+                font-size: 14px;
+            }
+            
+            .submit-btn {
+                font-size: 14px;
+                padding: 12px;
+            }
+        }
+
+        /* Landscape orientation on mobile */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .header {
+                margin-bottom: 20px;
+            }
+            
+            .form-group {
+                margin-bottom: 12px;
+            }
+            
+            .form-grid {
+                margin-bottom: 15px;
             }
         }
     </style>

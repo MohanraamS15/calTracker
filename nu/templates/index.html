@@ -1,3 +1,4 @@
+<!-- #index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +36,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 2rem;
+            padding: 0 1rem;
         }
 
         .logo {
@@ -46,12 +47,14 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            flex-shrink: 0;
         }
 
         .nav-links {
             display: flex;
-            gap: 2rem;
+            gap: 1rem;
             list-style: none;
+            flex-wrap: wrap;
         }
 
         .nav-links a {
@@ -63,6 +66,7 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            white-space: nowrap;
         }
 
         .nav-links a:hover {
@@ -80,35 +84,40 @@
         .main-container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 1rem;
         }
 
         /* Hero Section */
         .hero-section {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
             animation: fadeInUp 0.8s ease;
+            padding: 1rem 0;
         }
 
         .hero-title {
-            font-size: 2.8rem;
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
             font-weight: 700;
             color: white;
             margin-bottom: 1rem;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            line-height: 1.2;
         }
 
         .hero-subtitle {
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 3vw, 1.2rem);
             color: rgba(255, 255, 255, 0.9);
             margin-bottom: 2rem;
             line-height: 1.6;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         /* Example Foods */
         .example-foods {
             background: rgba(255, 255, 255, 0.95);
-            padding: 2rem;
+            padding: 1.5rem;
             border-radius: 15px;
             backdrop-filter: blur(10px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -119,27 +128,31 @@
         .example-title {
             color: #667eea;
             margin-bottom: 1rem;
-            font-size: 1.3rem;
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
             font-weight: 600;
             text-align: center;
         }
 
         .example-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0.8rem;
         }
 
         .example-item {
             background: #f8f9fa;
-            padding: 1rem;
+            padding: 0.8rem;
             border-radius: 8px;
             border-left: 3px solid #667eea;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #666;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .example-item:hover {
@@ -152,7 +165,7 @@
         /* Nutrition Checker Form */
         .nutrition-checker {
             background: rgba(255, 255, 255, 0.95);
-            padding: 3rem;
+            padding: 2rem;
             border-radius: 20px;
             backdrop-filter: blur(10px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -169,7 +182,7 @@
             margin-bottom: 0.5rem;
             font-weight: 600;
             color: #333;
-            font-size: 1.1rem;
+            font-size: clamp(1rem, 2.5vw, 1.1rem);
             text-align: center;
         }
 
@@ -178,7 +191,7 @@
             padding: 1rem 1.5rem;
             border: 2px solid #e0e6ed;
             border-radius: 50px;
-            font-size: 1rem;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
             transition: all 0.3s ease;
             background: white;
             text-align: center;
@@ -202,12 +215,13 @@
             color: white;
             border: none;
             border-radius: 50px;
-            font-size: 1.1rem;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 1px;
+            min-height: 50px;
         }
 
         .submit-btn:hover {
@@ -228,7 +242,7 @@
         /* Results Section */
         .results-section {
             background: rgba(255, 255, 255, 0.95);
-            padding: 2rem;
+            padding: 1.5rem;
             border-radius: 15px;
             backdrop-filter: blur(10px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -239,7 +253,7 @@
         .results-title {
             color: #667eea;
             margin-bottom: 1rem;
-            font-size: 1.5rem;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
             font-weight: 600;
             text-align: center;
         }
@@ -252,7 +266,9 @@
             border-radius: 10px;
             border-left: 4px solid #667eea;
             white-space: pre-line;
-            font-size: 1rem;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            overflow-wrap: break-word;
+            word-wrap: break-word;
         }
 
         .no-results {
@@ -260,6 +276,7 @@
             color: #666;
             font-style: italic;
             padding: 2rem;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
         }
 
         /* Animations */
@@ -274,36 +291,198 @@
             }
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
+        /* Mobile First Responsive Design */
+        
+        /* Extra Small Devices (phones, 0-576px) */
+        @media (max-width: 576px) {
             .nav-container {
                 flex-direction: column;
                 gap: 1rem;
+                padding: 0 0.5rem;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .nav-links {
+                justify-content: center;
+                gap: 0.5rem;
+                width: 100%;
+            }
+
+            .nav-links a {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .main-container {
+                padding: 0.5rem;
+            }
+
+            .example-foods {
+                padding: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .example-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 0.6rem;
+            }
+
+            .example-item {
+                padding: 0.6rem;
+                font-size: 0.8rem;
+                min-height: 45px;
+            }
+
+            .nutrition-checker {
+                padding: 1.5rem;
+            }
+
+            .form-input {
+                padding: 0.8rem 1rem;
+                text-align: left;
+            }
+
+            .submit-btn {
+                padding: 1rem;
+                letter-spacing: 0.5px;
+            }
+
+            .results-section {
+                padding: 1rem;
+            }
+
+            .results-content {
+                padding: 1rem;
+            }
+        }
+
+        /* Small Devices (landscape phones, 576px-768px) */
+        @media (min-width: 576px) and (max-width: 768px) {
+            .nav-container {
                 padding: 0 1rem;
             }
 
             .nav-links {
-                gap: 1rem;
-            }
-
-            .hero-title {
-                font-size: 2.2rem;
-            }
-
-            .main-container {
-                padding: 1rem;
-            }
-
-            .nutrition-checker {
-                padding: 2rem;
+                gap: 0.8rem;
             }
 
             .example-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             }
 
             .form-input {
                 text-align: left;
+            }
+        }
+
+        /* Medium Devices (tablets, 768px-992px) */
+        @media (min-width: 768px) and (max-width: 992px) {
+            .main-container {
+                padding: 1.5rem;
+            }
+
+            .example-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        /* Large Devices (desktops, 992px and up) */
+        @media (min-width: 992px) {
+            .main-container {
+                padding: 2rem;
+            }
+
+            .nutrition-checker {
+                padding: 3rem;
+            }
+
+            .results-section {
+                padding: 2rem;
+            }
+        }
+
+        /* Ultra wide screens */
+        @media (min-width: 1400px) {
+            .main-container {
+                max-width: 900px;
+            }
+        }
+
+        /* Landscape orientation adjustments */
+        @media (orientation: landscape) and (max-height: 600px) {
+            .hero-section {
+                margin-bottom: 1rem;
+                padding: 0.5rem 0;
+            }
+
+            .hero-title {
+                margin-bottom: 0.5rem;
+            }
+
+            .hero-subtitle {
+                margin-bottom: 1rem;
+            }
+
+            .example-foods, .nutrition-checker, .results-section {
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* High DPI displays */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .form-input, .submit-btn {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+        }
+
+        /* Focus styles for better accessibility */
+        @media (prefers-reduced-motion: no-preference) {
+            .form-input:focus, .submit-btn:focus, .example-item:focus {
+                transition: all 0.3s ease;
+            }
+        }
+
+        /* Reduced motion for users who prefer it */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .navbar {
+                background: rgba(0, 0, 0, 0.9);
+            }
+            
+            .nav-links a {
+                color: #e0e6ed;
+            }
+            
+            .example-foods, .nutrition-checker, .results-section {
+                background: rgba(0, 0, 0, 0.8);
+                color: #e0e6ed;
+            }
+            
+            .form-input {
+                background: rgba(255, 255, 255, 0.1);
+                color: #e0e6ed;
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+            
+            .form-input::placeholder {
+                color: rgba(255, 255, 255, 0.6);
+            }
+            
+            .results-content {
+                background: rgba(255, 255, 255, 0.1);
+                color: #e0e6ed;
             }
         }
     </style>
@@ -312,14 +491,14 @@
     <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="nav-container">
-            <a href="{% url 'home' %}" class="logo">
+            <a href="#" class="logo">
                 🍽️ CalTracker
             </a>
             <ul class="nav-links">
-                <li><a href="{% url 'home' %}">Home</a></li>
-                <li><a href="{% url 'check_calories' %}" class="active">Check Calories</a></li>
-                <li><a href="{% url 'login' %}">Login</a></li>
-                <li><a href="{% url 'signup' %}">Sign Up</a></li>
+                <li><a href="#">Home</a></li>
+                <li><a href="#" class="active">Check Calories</a></li>
+                <li><a href="#">Login</a></li>
+                <li><a href="#">Sign Up</a></li>
             </ul>
         </div>
     </nav>
@@ -350,7 +529,6 @@
         <!-- Nutrition Checker Form -->
         <div class="nutrition-checker">
             <form method="post" id="nutrition-form">
-                {% csrf_token %}
                 <div class="form-group">
                     <label for="food_input" class="form-label">Enter Food Item & Quantity</label>
                     <input 
@@ -359,7 +537,6 @@
                         id="food_input"
                         class="form-input"
                         placeholder="e.g., Apple 100g, Chicken breast 150g, Rice 1 cup"
-                        value="{{ request.POST.food_input|default:'' }}"
                         required
                     >
                 </div>
@@ -369,20 +546,13 @@
             </form>
         </div>
 
-        <!-- Results Section -->
-        {% if nutrition_data %}
-            <div class="results-section">
-                <h2 class="results-title">📊 Nutrition Information</h2>
-                <div class="results-content">{{ nutrition_data }}</div>
+        <!-- Results Section (Demo) -->
+        <div class="results-section" style="display: none;" id="results-section">
+            <h2 class="results-title">📊 Nutrition Information</h2>
+            <div class="results-content" id="results-content">
+                <!-- Results will be displayed here -->
             </div>
-        {% elif request.method == 'POST' %}
-            <div class="results-section">
-                <h2 class="results-title">⚠️ No Results</h2>
-                <div class="no-results">
-                    Please enter a valid food item and try again.
-                </div>
-            </div>
-        {% endif %}
+        </div>
     </div>
 
     <script>
@@ -397,17 +567,30 @@
             
             // Add loading state to submit button
             document.getElementById('nutrition-form').addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent actual form submission for demo
+                
                 const submitBtn = document.getElementById('submit-btn');
                 const foodInput = document.getElementById('food_input');
+                const resultsSection = document.getElementById('results-section');
+                const resultsContent = document.getElementById('results-content');
                 
                 if (foodInput.value.trim() === '') {
-                    e.preventDefault();
                     foodInput.focus();
                     return;
                 }
                 
                 submitBtn.innerHTML = '⏳ Analyzing Nutrition...';
                 submitBtn.disabled = true;
+                
+                // Simulate API call
+                setTimeout(() => {
+                    resultsContent.textContent = `Nutrition information for: ${foodInput.value}\n\nCalories: 95 kcal\nProtein: 0.5g\nCarbs: 25g\nFat: 0.3g\nFiber: 4g\nSugar: 19g`;
+                    resultsSection.style.display = 'block';
+                    resultsSection.scrollIntoView({ behavior: 'smooth' });
+                    
+                    submitBtn.innerHTML = '🔍 Get Nutrition Info';
+                    submitBtn.disabled = false;
+                }, 2000);
             });
             
             // Auto-focus on input field
