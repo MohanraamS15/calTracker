@@ -25,28 +25,35 @@ Live Demo 👉 [caltracker-yuau.onrender.com](https://caltracker-yuau.onrender.c
 
 ## ⚙️ Tech Stack
 
-| Layer       | Tech Used                             |
-|------------|-------------------------------------   |
-| 💻 Frontend | HTML5, CSS3, JavaScript (vanilla)     |
+| Layer       | Tech Used                            |
+|------------|---------------------------------------|
+| 💻 Frontend | HTML5, CSS3, JavaScript (vanilla)    |
 | 🧠 Backend  | Python 3.12, Django 5.1.6             |
-| 🗂️ Database | PostgreSQL(local), PostgreSQL (Render)|
-| 🤖 AI APIs  | Open AI API                           |
-| ☁️ Hosting  | Render                                |
+| 🗂️ Database | PostgreSQL (local & production)       |
+| 🤖 AI APIs  | Perplexity API, Google Gemini API    |
+| ☁️ Hosting  | Render                               |
+
 
 ```bash
-# 1. Clone the Repo
+# Clone the repository
 git clone https://github.com/MohanraamS15/calTracker.git
 cd calTracker
 
-# 2. Create Virtual Environment (optional but recommended)
+# Create a virtual environment (optional but recommended)
 python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
 
-# 3. Install Dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 4. Run Migrations
-python manage.py migrate
+# Set up your local PostgreSQL DATABASE_URL in .env file
+# Example .env content:
+# DATABASE_URL=postgres://username:password@localhost:5432/dbname
 
-# 5. Start the Development Server
+# Export your environment variable (skip if using .env loader)
+export DATABASE_URL=postgres://username:password@localhost:5432/dbname
+
+# Run migrations and start the server
+python manage.py migrate
 python manage.py runserver
+
